@@ -7,8 +7,8 @@ const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-disp
 const code = JetBrains_Mono({ subsets: ["latin"], variable: "--font-code" });
 
 export const metadata: Metadata = {
-  title: "Odoo Senior",
-  description: "Senior-level Odoo 16 to 20: predict, spot the bug, decide, recall.",
+  title: "Reconcile",
+  description: "Odoo, for people who ship it. Odoo 16 to 20.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

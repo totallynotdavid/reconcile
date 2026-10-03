@@ -6,7 +6,6 @@ import type { Source } from "@/content/types";
 import { PASS_RATIO } from "@/learning/leitner";
 import { type Answer, stars as starsOf } from "@/learning/progress";
 import { type Prepared, prepare } from "@/learning/session";
-import { play } from "@/ui/sound";
 import { LedgerStage } from "./LedgerStage";
 
 type Props = {
@@ -30,14 +29,12 @@ export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
   const current = prepared[index];
 
   function record(correct: boolean) {
-    play(correct ? "ok" : "bad");
     setAnswers((a) => [...a, { id: current.card.id, concept: current.card.concept, correct }]);
   }
 
   function next() {
     if (index + 1 < prepared.length) return setIndex(index + 1);
     const ok = answers.filter((a) => a.correct).length / answers.length >= PASS_RATIO;
-    if (ok || !gated) play("done");
     setDone(true);
     onDone(answers.map(({ concept, correct }) => ({ concept, correct })));
   }
@@ -290,7 +287,6 @@ function TriageView({ item, onGraded, onNext, last }: ViewProps<"triage">) {
   function pick(i: number) {
     if (picked !== null) return;
     setPicked(i);
-    play(i === s.answer ? "ok" : "bad");
     if (i !== s.answer) setSlips((n) => n + 1);
   }
 

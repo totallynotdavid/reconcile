@@ -39,11 +39,8 @@ function Tracks() {
     <div className="space-y-10">
       <section className="grid items-center gap-6 pt-4 lg:grid-cols-2">
         <div>
-          <p className="eyebrow">Odoo 16 to 20 · senior level</p>
-          <h1 className="mt-2 text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            Know what the <span className="text-[var(--odoo)]">ledger</span> will do.
-          </h1>
-          <p className="mt-4 max-w-md text-lg text-[var(--muted)]">Predict first, then watch. Spot the bug, decide, recall. Every card cites its source and says whether the docs back it.</p>
+          <h1 className="text-6xl font-extrabold tracking-tight sm:text-7xl">Reconcile</h1>
+          <p className="mt-3 text-xl text-[var(--muted)]">Odoo, for people who ship it.</p>
           <div className="mt-6 flex flex-wrap gap-3">
             {resume && (
               <Link href={`/level/${resume.id}/`} className="btn btn-primary flex items-center gap-2 px-6 py-3 text-lg">

@@ -1,4 +1,4 @@
-# Odoo Senior
+# Reconcile
 
 Study app for senior-level Odoo 16 to 20. It has five tracks: ledger (invoice, payment, reconciliation), ORM and views, version deltas, field notes (scenarios from the docs map), and operations.
 
