@@ -1,35 +1,43 @@
 "use client";
+import { ArrowRight, CheckCircle, Fire, Star, XCircle } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { Source } from "@/content/types";
-import type { Answer } from "@/learning/progress";
-import { type Prepared, prepare } from "@/learning/session";
 import { PASS_RATIO } from "@/learning/leitner";
+import { type Answer, stars as starsOf } from "@/learning/progress";
+import { type Prepared, prepare } from "@/learning/session";
+import { play } from "@/ui/sound";
+import { LedgerStage } from "./LedgerStage";
 
 type Props = {
   cards: Parameters<typeof prepare>[0][];
   seed: number;
-  /** Shown on the result screen. When set, a score under the pass ratio counts as a fail. */
+  /** When set, a score under the pass ratio counts as a fail. */
   gated?: boolean;
   onDone: (answers: Answer[]) => void;
   /** Rendered under the score when the session ends. */
   footer?: (passed: boolean, retry: () => void) => React.ReactNode;
 };
 
+type Result = Answer & { id: string };
+
 export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
   const [round, setRound] = useState(0);
   const prepared = useMemo(() => cards.map((c) => prepare(c, seed + round)), [cards, seed, round]);
   const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<(Answer & { id: string })[]>([]);
+  const [answers, setAnswers] = useState<Result[]>([]);
   const [done, setDone] = useState(false);
-
   const current = prepared[index];
 
   function record(correct: boolean) {
+    play(correct ? "ok" : "bad");
     setAnswers((a) => [...a, { id: current.card.id, concept: current.card.concept, correct }]);
   }
 
   function next() {
     if (index + 1 < prepared.length) return setIndex(index + 1);
+    const ok = answers.filter((a) => a.correct).length / answers.length >= PASS_RATIO;
+    if (ok || !gated) play("done");
     setDone(true);
     onDone(answers.map(({ concept, correct }) => ({ concept, correct })));
   }
@@ -41,39 +49,93 @@ export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
     setDone(false);
   }
 
-  if (done) {
-    const correct = answers.filter((a) => a.correct).length;
-    const ok = correct / answers.length >= PASS_RATIO;
-    const missed = prepared.filter((p) => answers.some((a) => a.id === p.card.id && !a.correct));
-    return (
-      <div>
-        <h2 className="text-xl font-bold">
-          {correct} of {answers.length}
-          {gated && <span className={ok ? " text-[var(--good)]" : " text-[var(--bad)]"}> — {ok ? "passed" : "not yet"}</span>}
-        </h2>
-        {gated && !ok && <p className="mt-1 text-sm">You need {Math.round(PASS_RATIO * 100)}%. Retry brings new numbers on the predict cards.</p>}
-        {missed.length > 0 && (
-          <div className="mt-4 space-y-3">
-            <h3 className="font-semibold">Missed</h3>
-            {missed.map((p) => (
-              <div key={p.card.id} className="rounded-lg border border-[var(--line)] bg-white p-3 text-sm">
-                <p className="font-medium">{p.kind === "triage" ? p.prompt : p.prompt}</p>
-                <p className="mt-1 opacity-80">{p.card.why}</p>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="mt-5">{footer?.(ok, retry)}</div>
-      </div>
-    );
-  }
+  if (done) return <Results prepared={prepared} answers={answers} gated={gated} footer={footer?.(passedOf(answers), retry)} />;
+
+  let streak = 0;
+  for (let i = answers.length - 1; i >= 0 && answers[i].correct; i--) streak++;
 
   return (
     <div>
-      <p className="mb-3 text-xs uppercase tracking-wide opacity-60">
-        {index + 1} / {prepared.length}
-      </p>
-      <Card key={`${round}-${index}`} item={current} onGraded={record} onNext={next} last={index + 1 === prepared.length} />
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex flex-1 gap-1.5" role="progressbar" aria-valuemin={0} aria-valuemax={prepared.length} aria-valuenow={answers.length}>
+          {prepared.map((p, i) => {
+            const r = answers.find((a) => a.id === p.card.id);
+            const tone = r ? (r.correct ? "bg-[var(--good)]" : "bg-[var(--bad)]") : i === index ? "bg-[var(--amber)]" : "bg-[var(--line)]";
+            return <span key={p.card.id} className={`h-2.5 flex-1 rounded-full transition-colors ${tone}`} />;
+          })}
+        </div>
+        <span className={`flex items-center gap-1 text-sm font-bold ${streak >= 2 ? "text-[var(--amber-deep)]" : "text-[var(--muted)]"}`}>
+          <Fire size={20} weight="fill" />
+          {streak}
+        </span>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={`${round}-${index}`} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.18 }}>
+          <Card item={current} onGraded={record} onNext={next} last={index + 1 === prepared.length} />
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const passedOf = (answers: Result[]) => answers.length > 0 && answers.filter((a) => a.correct).length / answers.length >= PASS_RATIO;
+
+function Results({ prepared, answers, gated, footer }: { prepared: Prepared[]; answers: Result[]; gated: boolean; footer: React.ReactNode }) {
+  const correct = answers.filter((a) => a.correct).length;
+  const ratio = correct / answers.length;
+  const ok = ratio >= PASS_RATIO;
+  const missed = prepared.filter((p) => answers.some((a) => a.id === p.card.id && !a.correct));
+  const stars = starsOf({ best: correct, total: answers.length, passed: ok, attempts: 1 });
+  const radius = 52;
+  const circ = 2 * Math.PI * radius;
+  return (
+    <div className="space-y-5">
+      <div className="panel flex flex-col items-center gap-3 p-8 text-center">
+        <div className="relative size-36">
+          <svg viewBox="0 0 120 120" className="size-full -rotate-90">
+            <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--line)" strokeWidth="10" />
+            <motion.circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="none"
+              stroke={ok || !gated ? "var(--good)" : "var(--amber)"}
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              initial={{ strokeDashoffset: circ }}
+              animate={{ strokeDashoffset: circ * (1 - ratio) }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+            />
+          </svg>
+          <span className="absolute inset-0 grid place-items-center text-3xl font-extrabold">
+            {correct}/{answers.length}
+          </span>
+        </div>
+        {gated && (
+          <div className="flex gap-1.5">
+            {[1, 2, 3].map((n) => (
+              <motion.span key={n} initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.5 + n * 0.15, type: "spring", stiffness: 300 }}>
+                <Star size={34} weight="fill" color={n <= stars ? "var(--amber)" : "var(--line)"} />
+              </motion.span>
+            ))}
+          </div>
+        )}
+        <h2 className="text-2xl font-extrabold">{!gated ? "Done" : ok ? "Level passed" : "Not yet"}</h2>
+        {gated && !ok && <p className="max-w-sm text-sm text-[var(--muted)]">You need {Math.round(PASS_RATIO * 100)}%. A retry brings new numbers on the predict cards.</p>}
+      </div>
+      {missed.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="eyebrow">Missed</h3>
+          {missed.map((p) => (
+            <div key={p.card.id} className="panel p-4 text-sm">
+              <p className="font-semibold">{p.prompt}</p>
+              <p className="mt-1.5 text-[var(--muted)]">{p.card.why}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      <div>{footer}</div>
     </div>
   );
 }
@@ -81,32 +143,44 @@ export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
 function SourceTag({ source }: { source?: Source }) {
   if (!source) return null;
   return (
-    <p className="mt-2 text-xs opacity-70">
-      <span className={source.verified ? "text-[var(--good)]" : "text-[var(--bad)]"}>{source.verified ? "docs-verified" : "unverified"}</span>
-      {" · "}
+    <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-[var(--muted)]">
+      <span className={`rounded-full px-2 py-0.5 font-bold ${source.verified ? "bg-[var(--good-soft)] text-[var(--good)]" : "bg-[var(--bad-soft)] text-[var(--bad)]"}`}>
+        {source.verified ? "docs-verified" : "unverified"}
+      </span>
       Odoo {source.version} · {source.ref}
     </p>
   );
 }
 
+/** Bottom sheet: the verdict, the reason, the way on. */
 function Feedback({ item, correct, onNext, last }: { item: Prepared; correct: boolean; onNext: () => void; last: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Enter" && onNext();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onNext]);
+  const tone = correct ? "border-[var(--good)] bg-[var(--good-soft)]" : "border-[var(--bad)] bg-[var(--bad-soft)]";
   return (
-    <div className="mt-4 rounded-lg border border-[var(--line)] bg-white p-4 text-sm">
-      <p className={correct ? "font-semibold text-[var(--good)]" : "font-semibold text-[var(--bad)]"}>{correct ? "Right" : "Not quite"}</p>
-      <p className="mt-1">{item.card.why}</p>
-      {item.kind === "choice" && item.trace && (
-        <pre className="mono mt-3 overflow-x-auto rounded bg-[var(--odoo-soft)] p-3 text-xs">{item.trace.join("\n")}</pre>
-      )}
-      <SourceTag source={item.card.source} />
-      <button className="btn btn-primary mt-4 w-full" onClick={onNext}>
-        {last ? "Finish" : "Next"} <span className="opacity-60">(Enter)</span>
-      </button>
-    </div>
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+      className={`fixed inset-x-0 bottom-0 z-30 border-t-2 ${tone}`}
+    >
+      <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
+        <div className="flex-1 text-sm">
+          <p className={`flex items-center gap-2 text-base font-extrabold ${correct ? "text-[var(--good)]" : "text-[var(--bad)]"}`}>
+            {correct ? <CheckCircle size={24} weight="fill" /> : <XCircle size={24} weight="fill" />}
+            {correct ? "Right" : "Not quite"}
+          </p>
+          <p className="mt-1">{item.card.why}</p>
+          <SourceTag source={item.card.source} />
+        </div>
+        <button className="btn btn-primary flex shrink-0 items-center justify-center gap-2 px-6" onClick={onNext}>
+          {last ? "Finish" : "Next"} <ArrowRight size={18} weight="bold" /> <span className="keycap">Enter</span>
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
@@ -122,6 +196,17 @@ type ViewProps<K extends Prepared["kind"]> = {
   onNext: () => void;
   last: boolean;
 };
+
+const shake = { x: [0, -8, 8, -5, 5, 0], transition: { duration: 0.35 } };
+
+function Prompt({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <p className="eyebrow">{label}</p>
+      <p className="mt-1.5 text-xl font-bold leading-snug sm:text-2xl">{children}</p>
+    </div>
+  );
+}
 
 function ChoiceView({ item, onGraded, onNext, last }: ViewProps<"choice">) {
   const [picked, setPicked] = useState<number | null>(null);
@@ -144,16 +229,20 @@ function ChoiceView({ item, onGraded, onNext, last }: ViewProps<"choice">) {
 
   return (
     <div>
-      {isPredict && <p className="mb-1 text-xs font-semibold uppercase text-[var(--odoo)]">Predict first, then see the ledger</p>}
-      <p className="text-lg font-medium">{item.prompt}</p>
-      <div className="mt-4 grid gap-2">
+      <Prompt label={isPredict ? "Predict, then watch the ledger" : "Choose"}>{item.prompt}</Prompt>
+      {item.scene && (
+        <div className="mb-4">
+          <LedgerStage scene={item.scene} reveal={picked !== null} />
+        </div>
+      )}
+      <div className="grid gap-2.5 sm:grid-cols-2">
         {item.options.map((o, i) => {
-          const cls = picked === null ? "" : i === item.answer ? "good" : i === picked ? "bad" : "";
+          const state = picked === null ? "" : i === item.answer ? "good" : i === picked ? "bad" : "dim";
           return (
-            <button key={i} disabled={picked !== null} onClick={() => pick(i)} className={`btn ${cls}`}>
-              <span className="mr-2 opacity-50">{i + 1}</span>
-              {o}
-            </button>
+            <motion.button key={o} disabled={picked !== null} onClick={() => pick(i)} className={`btn flex items-start gap-3 ${state}`} animate={state === "bad" ? shake : undefined}>
+              <span className="keycap mt-0.5 shrink-0">{i + 1}</span>
+              <span>{o}</span>
+            </motion.button>
           );
         })}
       </div>
@@ -166,11 +255,10 @@ function BugView({ item, onGraded, onNext, last }: ViewProps<"bug">) {
   const [picked, setPicked] = useState<number | null>(null);
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold uppercase text-[var(--odoo)]">Spot the bug · {item.language}</p>
-      <p className="text-lg font-medium">{item.prompt}</p>
-      <div className="mono mt-4 overflow-x-auto rounded-lg border border-[var(--line)] bg-white text-xs">
+      <Prompt label={`Spot the bug · ${item.language}`}>{item.prompt}</Prompt>
+      <div className="mono panel overflow-hidden text-[13px]">
         {item.lines.map((line, i) => {
-          const cls = picked === null ? "" : i === item.answer ? "good" : i === picked ? "bad" : "";
+          const state = picked === null ? "" : i === item.answer ? "bg-[var(--good-soft)]" : i === picked ? "bg-[var(--bad-soft)]" : "opacity-50";
           return (
             <button
               key={i}
@@ -179,10 +267,10 @@ function BugView({ item, onGraded, onNext, last }: ViewProps<"bug">) {
                 setPicked(i);
                 onGraded(i === item.answer);
               }}
-              className={`flex w-full gap-3 border-b border-[var(--line)] px-3 py-1.5 text-left last:border-b-0 hover:bg-[var(--odoo-soft)] ${cls}`}
+              className={`flex w-full cursor-pointer gap-3 border-b border-[var(--line)] px-4 py-2.5 text-left last:border-b-0 enabled:hover:bg-[var(--odoo-soft)] ${state}`}
             >
-              <span className="w-4 shrink-0 opacity-40">{i + 1}</span>
-              <span className="whitespace-pre">{line}</span>
+              <span className="w-4 shrink-0 text-[var(--muted)]">{i + 1}</span>
+              <span className="whitespace-pre-wrap break-words">{line}</span>
             </button>
           );
         })}
@@ -202,6 +290,7 @@ function TriageView({ item, onGraded, onNext, last }: ViewProps<"triage">) {
   function pick(i: number) {
     if (picked !== null) return;
     setPicked(i);
+    play(i === s.answer ? "ok" : "bad");
     if (i !== s.answer) setSlips((n) => n + 1);
   }
 
@@ -216,23 +305,22 @@ function TriageView({ item, onGraded, onNext, last }: ViewProps<"triage">) {
 
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold uppercase text-[var(--odoo)]">Triage · step {step + 1} of {item.steps.length}</p>
-      <p className="text-sm opacity-70">{item.prompt}</p>
-      <p className="mt-2 text-lg font-medium">{s.clue}</p>
-      <div className="mt-4 grid gap-2">
+      <p className="mb-3 text-sm text-[var(--muted)]">{item.prompt}</p>
+      <Prompt label={`Triage · step ${step + 1} of ${item.steps.length}`}>{s.clue}</Prompt>
+      <div className="grid gap-2.5 sm:grid-cols-2">
         {s.options.map((o, i) => {
-          const cls = picked === null ? "" : i === s.answer ? "good" : i === picked ? "bad" : "";
+          const state = picked === null ? "" : i === s.answer ? "good" : i === picked ? "bad" : "dim";
           return (
-            <button key={i} disabled={picked !== null} onClick={() => pick(i)} className={`btn ${cls}`}>
+            <motion.button key={o} disabled={picked !== null} onClick={() => pick(i)} className={`btn ${state}`} animate={state === "bad" ? shake : undefined}>
               {o}
-            </button>
+            </motion.button>
           );
         })}
       </div>
       {picked !== null && !finished && (
-        <div className="mt-4 rounded-lg border border-[var(--line)] bg-white p-4 text-sm">
+        <div className="panel mt-4 p-4 text-sm">
           <p>{s.why}</p>
-          <button className="btn btn-primary mt-3 w-full" onClick={advance}>
+          <button className="btn btn-plum mt-3 w-full" onClick={advance} autoFocus>
             Continue
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DAY } from "./leitner";
-import { emptyProgress, isUnlocked, recordExam, recordLevel, recordReview } from "./progress";
+import { emptyProgress, isUnlocked, recordExam, recordLevel, recordReview, stars } from "./progress";
 
 const now = Date.UTC(2026, 9, 2);
 const right = (concept: string) => ({ concept, correct: true });
@@ -42,5 +42,14 @@ describe("progress", () => {
     data = recordExam(data, [right("x"), right("y"), wrong("z")], now);
     data = recordExam(data, [right("x"), wrong("y"), wrong("z")], now);
     expect(data.exam).toEqual({ best: 2, total: 3 });
+  });
+
+  it("awards stars from the best run", () => {
+    const result = (best: number, passed: boolean) => ({ best, total: 5, passed, attempts: 1 });
+    expect(stars(undefined)).toBe(0);
+    expect(stars(result(2, false))).toBe(0);
+    expect(stars(result(3, false))).toBe(1);
+    expect(stars(result(4, true))).toBe(2);
+    expect(stars(result(5, true))).toBe(3);
   });
 });

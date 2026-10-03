@@ -52,3 +52,12 @@ export function recordExam(data: ProgressData, answers: Answer[], now: number): 
 export function isUnlocked(data: ProgressData, trackLevelIds: string[], index: number): boolean {
   return index === 0 || !!data.levels[trackLevelIds[index - 1]]?.passed;
 }
+
+/** 0 to 3 stars: 3 for a perfect run, 2 once passed, 1 for half right. */
+export function stars(result: LevelResult | undefined): number {
+  if (!result || result.total === 0) return 0;
+  const ratio = result.best / result.total;
+  if (ratio === 1) return 3;
+  if (result.passed) return 2;
+  return ratio >= 0.5 ? 1 : 0;
+}

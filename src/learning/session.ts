@@ -1,8 +1,10 @@
 import type { Card, PredictScenario, TriageStep } from "@/content/types";
 import { type LedgerEvent, type Settlement, settle } from "@/sim/ledger";
 
+export type Scene = { total: number; events: LedgerEvent[] };
+
 export type Prepared =
-  | { card: Card; kind: "choice"; prompt: string; options: string[]; answer: number; trace?: string[] }
+  | { card: Card; kind: "choice"; prompt: string; options: string[]; answer: number; trace?: string[]; scene?: Scene }
   | { card: Card; kind: "bug"; prompt: string; language: string; lines: string[]; answer: number }
   | { card: Card; kind: "triage"; prompt: string; steps: (TriageStep & { options: string[]; answer: number })[] };
 
@@ -59,7 +61,7 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `A posted invoice for ${money(total)} receives one payment of ${money(paid)}. What is amount_residual?`;
       const correct = money(s.residual);
       const wrong = [money(total), money(paid), money(total + paid)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s) };
+      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
     }
     case "two-partials": {
       const first = pick(rand, 100, total - 100, 100);
@@ -72,7 +74,7 @@ function predict(scenario: PredictScenario, rand: () => number) {
         `${s.partials.length} partial reconciles and no full reconcile`,
         "1 partial reconcile and a full reconcile",
       ];
-      return { prompt, options: [correct, ...wrong], trace: describe(s) };
+      return { prompt, options: [correct, ...wrong], trace: describe(s), scene: { total, events } };
     }
     case "overpay": {
       const extra = pick(rand, 100, 500, 100);
@@ -81,7 +83,7 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `A customer pays ${money(total + extra)} against an invoice for ${money(total)}. How much stays open as credit on the payment line?`;
       const correct = money(s.openCredit);
       const wrong = ["0", money(total), money(total + extra)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s) };
+      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
     }
     case "credit-note": {
       const credit = pick(rand, 100, total / 2, 100);
@@ -91,7 +93,7 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `An invoice for ${money(total)} gets a credit note of ${money(credit)} and then a payment of ${money(pay)}. What is amount_residual?`;
       const correct = money(s.residual);
       const wrong = [money(total - pay), money(total - credit), money(credit + pay)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s) };
+      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
     }
     case "waiting-bank": {
       events.push({ type: "payment", amount: total, bankReconciled: false });
@@ -99,7 +101,7 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `An invoice for ${money(total)} is paid in full by a payment that no bank statement line has matched yet. What is payment_state?`;
       const correct = s.paymentState;
       const wrong = ["paid", "partial", "not_paid"];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s) };
+      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
     }
   }
 }
@@ -114,7 +116,7 @@ export function prepare(card: Card, seed: number): Prepared {
     case "predict": {
       const p = predict(card.scenario, rand);
       const mixed = shuffleOptions(p.options, 0, rand);
-      return { card, kind: "choice", prompt: p.prompt, ...mixed, trace: p.trace };
+      return { card, kind: "choice", prompt: p.prompt, ...mixed, trace: p.trace, scene: p.scene };
     }
     case "bug":
       return { card, kind: "bug", prompt: card.prompt, language: card.language, lines: card.lines, answer: card.answer };

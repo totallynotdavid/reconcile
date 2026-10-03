@@ -1,4 +1,5 @@
 "use client";
+import { ArrowLeft, Warning } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Gate } from "@/components/Hydrate";
@@ -24,17 +25,36 @@ function Level({ id }: { id: string }) {
   const nextLevel = track.levels[index + 1];
 
   if (!started) {
+    const kinds = { predict: 0, choice: 0, bug: 0, triage: 0 };
+    for (const c of level.cards) kinds[c.kind]++;
+    const parts = [
+      kinds.predict && `${kinds.predict} predict`,
+      kinds.choice && `${kinds.choice} decide`,
+      kinds.bug && `${kinds.bug} spot the bug`,
+      kinds.triage && `${kinds.triage} triage`,
+    ].filter(Boolean);
     return (
-      <div>
-        <p className="text-xs uppercase opacity-60">{track.title}</p>
-        <h1 className="mt-1 text-2xl font-bold">{level.title}</h1>
-        <p className="mt-3">{level.brief}</p>
-        <div className="mt-4 rounded-lg border border-[var(--line)] bg-white p-3 text-sm">
-          <p className="font-semibold">Where the model lies</p>
-          <p className="mt-1 opacity-80">{level.caveat}</p>
+      <div className="mx-auto max-w-2xl space-y-5">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--muted)] hover:text-[var(--ink)]">
+          <ArrowLeft size={16} weight="bold" /> {track.title}
+        </Link>
+        <div>
+          <p className="eyebrow">
+            Level {index + 1} of {track.levels.length}
+          </p>
+          <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{level.title}</h1>
+          <p className="mt-2 text-lg text-[var(--muted)]">{level.brief}</p>
+          <p className="mt-3 text-sm font-semibold">{parts.join(" · ")}</p>
         </div>
-        <button className="btn btn-primary mt-5 w-full" onClick={() => setStarted(true)}>
-          Start ({level.cards.length} cards)
+        <div className="panel flex gap-3 border-l-4 border-l-[var(--amber)] p-4">
+          <Warning size={22} weight="fill" className="mt-0.5 shrink-0 text-[var(--amber-deep)]" />
+          <div className="text-sm">
+            <p className="font-bold">Where the model lies</p>
+            <p className="mt-1 text-[var(--muted)]">{level.caveat}</p>
+          </div>
+        </div>
+        <button className="btn btn-primary w-full py-3 text-lg" onClick={() => setStarted(true)}>
+          Start
         </button>
       </div>
     );
@@ -48,12 +68,12 @@ function Level({ id }: { id: string }) {
       footer={(passed, retry) => (
         <div className="flex gap-3">
           {!passed && (
-            <button className="btn btn-primary px-4" onClick={retry}>
+            <button className="btn btn-primary px-6" onClick={retry}>
               Retry
             </button>
           )}
           {passed && nextLevel && (
-            <Link className="btn btn-primary px-4" href={`/level/${nextLevel.id}/`}>
+            <Link className="btn btn-primary px-6" href={`/level/${nextLevel.id}/`}>
               Next level
             </Link>
           )}

@@ -39,7 +39,7 @@ function ReviewRound() {
   if (cards.length === 0) {
     return (
       <div>
-        <h1 className="text-xl font-bold">Nothing due</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">Nothing due</h1>
         <p className="mt-2 text-sm">Finish a level to start the schedule. Concepts come back after 1, 2, 4, 8 and 16 days.</p>
         <Link href="/" className="btn mt-4 inline-block px-4">
           Home
@@ -50,7 +50,7 @@ function ReviewRound() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-bold">Review</h1>
+      <h1 className="mb-5 text-3xl font-extrabold tracking-tight">Review</h1>
       <Session
         cards={cards}
         seed={seed}
