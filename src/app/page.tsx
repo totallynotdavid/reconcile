@@ -40,6 +40,7 @@ function Tracks() {
       <section className="grid items-center gap-6 pt-4 lg:grid-cols-2">
         <div>
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl">Odoo, for people who ship it.</h1>
+          <p className="mt-4 text-xl text-[var(--muted)]">Odoo 16 to 20. Predict what happens, then watch it.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             {resume && (
               <Link href={`/level/${resume.id}/`} className="btn btn-primary flex items-center gap-2 px-6 py-3 text-lg">
