@@ -28,6 +28,6 @@ export const useProgress = create<Store>()(
       finishExam: (answers) => set(recordExam(data(get()), answers, Date.now())),
       reset: () => set(emptyProgress()),
     }),
-    { name: "odoo-senior-progress", skipHydration: true },
+    { name: "reconcile-progress", skipHydration: true },
   ),
 );
