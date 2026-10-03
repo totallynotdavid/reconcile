@@ -55,6 +55,22 @@ export const notes: Track = {
       ],
     },
     {
+      id: "notes-bank",
+      title: "Bank rules and access",
+      brief: "Reconcile models by version, record rules, QWeb names.",
+      caveat: "The 19 and 20 reconcile model fields come from source. The 20 docs do not mention rule_type.",
+      cards: [
+        ch("n-bank-1", "notes-bank", "Bank fees keep landing unmatched every week. What is the least risky model?", "A manual or propose model with a label match and an expense counterpart line", ["Auto-reconcile every small line", "Delete the broad model", "Add the bank to match_partner_ids"], "Auto-reconcile on a loose label books wrong entries silently.", map("accounting", "18.0 to 20.0")),
+        ch("n-bank-2", "notes-bank", "Two reconcile models match one bank line and the wrong one wins. Fix?", "Reorder them by sequence. Keep the perfect-match model first", ["Delete the broad model", "Raise the tolerance", "Switch the journal"], "Order decides. A broad model ahead of the perfect match steals lines.", map("accounting", "16.0 to 18.0")),
+        ch("n-bank-3", "notes-bank", "A customer pays 1 cent short every time. A client on 19 Community asks for payment tolerance on the reconcile model. What do you say?", "The field is not in the 19 Community file. It exists in 18 and returns in 20", ["Set payment_tolerance on the model", "Use match_amount between", "It is a journal setting"], "Check the file for your version before promising a setting.", map("accounting", "18.0 to 20.0", false)),
+        ch("n-bank-4", "notes-bank", "A model must find the partner from the bank label. Which field does that?", "match_label with one partner-only line, which sets mapped_partner_id", ["Add the partner to match_partner_ids", "Set trigger to auto_reconcile", "Set can_be_proposed"], "match_partner_ids filters lines. It does not assign a partner.", map("accounting", "19.0", false)),
+        ch("n-bank-5", "notes-bank", "Two groups each have a rule on sale.order. A user is in both. What does the user see?", "Records allowed by either rule. Group rules union", ["Only records allowed by both", "Nothing", "Records of the first group only"], "Only global rules intersect.", map("backend", "16.0 to 19.0")),
+        ch("n-bank-6", "notes-bank", "A rule has perm_read unchecked. A consultant expects read to be forbidden. Is it?", "No. Unchecked means the rule does not apply to read", ["Yes, the flag denies read", "Yes, for non-admins", "Only on stored fields"], "The flags choose which operations a rule covers. They are not grants.", map("backend", "16.0 to 19.0")),
+        ch("n-bank-7", "notes-bank", "A field has groups=... and a user outside the group reads it over RPC. Result?", "AccessError", ["An empty value", "False", "The value, rules do not apply to RPC"], "Read and write raise on a restricted field.", map("backend", "16.0 to 19.0")),
+        ch("n-bank-8", "notes-bank", "A 20 module ships ir.model.access.csv. What does the 20 source say?", "Source uses ir.access. Compatibility with the old file is not confirmed", ["Identical to 16 to 19", "The csv is rejected with a clear error", "It converts on load"], "Test the module on 20 before you promise a port.", map("backend", "20.0", false)),
+      ],
+    },
+    {
       id: "notes-platform",
       title: "Upgrade and platform",
       brief: "Script phases, API removal, keys, workers, dumps.",

@@ -92,4 +92,4 @@ Each milestone ends with: `vitest` passing, one browser run of the real flow, an
 
 ## Status
 
-M1 to M3 are built. `docs/map/` holds a cited map of four areas, checked by sampling facts against the sources. The Field notes track is built from its question seeds. The exam's outdated answers are fixed in the ledger and version tracks. Next: more cards from the maps' Doubts and Gaps.
+M1 to M3 are built. `docs/map/` holds a cited map of four areas, checked by sampling facts against the sources. The Field notes track is built from its question seeds. The exam's outdated answers are fixed in the ledger and version tracks. Field notes has five levels. Next: the by-version rows marked "not found" in the maps still need a diff.
