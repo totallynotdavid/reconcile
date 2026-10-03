@@ -14,6 +14,12 @@ export const doc = (version: string, file: keyof typeof DOCS): Source => ({
   verified: true,
 });
 
+export const map = (area: string, version: string, verified = true): Source => ({
+  version,
+  ref: `docs/map/${area}.md (cited to odoo/documentation or odoo/odoo source)`,
+  verified,
+});
+
 export const exam = (version = "17.0"): Source => ({ version, ref: "exam", verified: false });
 
 export const unverified = (version: string, note: string): Source => ({ version, ref: note, verified: false });

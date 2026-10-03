@@ -1,11 +1,5 @@
-import { ch } from "./build";
-import type { Source, Track } from "./types";
-
-const map = (area: string, version: string, verified = true): Source => ({
-  version,
-  ref: `docs/map/${area}.md (cited to odoo/documentation or odoo/odoo source)`,
-  verified,
-});
+import { ch, map } from "./build";
+import type { Track } from "./types";
 
 export const notes: Track = {
   id: "notes",

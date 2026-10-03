@@ -1,4 +1,4 @@
-import { bug, ch, doc, exam, unverified } from "./build";
+import { bug, ch, doc, exam, map, unverified } from "./build";
 import type { Track } from "./types";
 
 export const versions: Track = {
@@ -36,6 +36,8 @@ export const versions: Track = {
         ch("v2-c3", "v17-18", "A server action that checked permissions with two calls (rights and then rules) on 17. What is available in 18?", "check_access, has_access or _filtered_access", ["Only check_access_rights, renamed", "Nothing; keep using two calls", "env.user.has_group only"], "They combine both in one call.", doc("18.0", "ormLog")),
         ch("v2-c4", "v17-18", "Odoo 17.4 removes the internal domain operator inselect. What do you use?", "in, with a Query or SQL object", ["not in", "like", "child_of"], "Any domain that carried inselect has to be rewritten.", doc("17.4 (Online)", "ormLog")),
         ch("v2-c5", "v17-18", "From 17.3, what does a domain or read_group gain?", "Grouping by date parts as numbers", ["Grouping by hour of week only", "A new aggregate named median", "Automatic timezone detection per user"], "That makes 'by month number' style reports possible without SQL.", doc("17.3 (Online)", "ormLog")),
+        ch("v2-c7", "v17-18", "Accounting on 18: which change breaks code that reads a payment through its journal entry?", "account.payment has its own state and no longer inherits account.move", ["Payments moved to bank statements", "The payment model was renamed", "Payments became lines of the invoice"], "Filters on the move state or move_id fields need a rewrite.", map("accounting", "18.0", false)),
+        ch("v2-c8", "v17-18", "Accounting on 18: a bookkeeper must post one late entry in a locked period. What exists that did not before?", "A lock exception (account.lock_exception) for a user and a period", ["Nothing; lower the lock date", "A per-journal password", "A cron that unlocks at night"], "Lock dates were reworked in 18 so one exception does not open the period for everyone.", map("accounting", "18.0")),
         ch("v2-c6", "v17-18", "From 18.1, how do you declare SQL constraints and indexes on a model?", "As model attributes, instead of the old _sql_constraints list", ["Only in XML data files", "With @api.constrains and an index argument", "Only through a migration script"], "The changelog says constraints and indexes are declared as model attributes. The 19.0 reference shows models.Constraint and models.Index.", doc("18.1 (Online)", "ormLog")),
       ],
     },
@@ -70,6 +72,7 @@ export const versions: Track = {
         ch("v4-c3", "v19-20", "From 19.1, Field.compute_sql can be set. What does it unlock?", "Grouping and sorting by a computed field that is not stored", ["Faster writes on stored fields", "Translation of computed fields", "Per-company computes"], "That changes the store=True trade-off from your exam. You can sometimes skip storage and still sort.", doc("19.1 (Online)", "ormLog")),
         ch("v4-c4", "v19-20", "From 19.3, Binary fields hold a BinaryValue. What is affected?", "Code that base64-encoded and decoded the field value by hand", ["Only image fields", "Only attachments in the website module", "Nothing in Python; only JS"], "The data flow stops encoding with base64 all over. In 20 the object also carries a filename.", doc("19.3 (Online)", "ormLog")),
         ch("v4-c5", "v19-20", "From 19.4, model code can no longer use the HTTP request. What is the alternative named for the website?", "env.website", ["self.request", "odoo.http.session", "A thread-local"], "The change removes request from models, with env.website added.", doc("19.4 (Online)", "ormLog")),
+        ch("v4-c7", "v19-20", "The 20.0 source changes account.payment states compared with 19. What does the documentation say?", "Nothing. The 20 docs are identical to 19, so read the source", ["It lists the new states", "It removes payments", "It marks them as deprecated"], "In source, 20 uses draft, paid, reconciled, canceled and rejected. 19 has in_process, not reconciled.", map("accounting", "20.0", false)),
         ch("v4-c6", "v19-20", "In 20.0, what is the default copy behavior for a Char field named name?", "It adds \"(copy)\" to the value", ["It copies the value as is", "It clears the value", "It raises an error"], "Fields now have a copy function, and this is its default.", doc("20.0", "ormLog")),
       ],
     },
