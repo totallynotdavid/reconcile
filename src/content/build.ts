@@ -13,6 +13,7 @@ const DOCS = {
   registries: "content/developer/reference/frontend/registries.rst",
   owl: "content/developer/reference/frontend/owl_components.rst",
   debug: "content/developer/reference/frontend/framework_overview.rst",
+  architecture: "content/developer/tutorials/server_framework_101/01_architecture.rst",
   upgradeService: "content/administration/upgrade.rst",
 } as const;
 
@@ -26,8 +27,8 @@ export const map = (area: string, version: string): Source => ({
   ref: `docs/map/${area}.md (cited to odoo/documentation or odoo/odoo source)`,
 });
 
-/** A claim read in odoo/odoo source rather than the documentation. */
-export const src = (version: string, path: string): Source => ({ version, ref: `odoo/odoo ${path}` });
+/** A claim read in source rather than the documentation. The repo is odoo/odoo unless given. */
+export const src = (version: string, path: string, repo = "odoo/odoo"): Source => ({ version, ref: `${repo} ${path}` });
 
 /** The correct option goes first; the session shuffles the order. */
 export function ch(

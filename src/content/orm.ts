@@ -67,6 +67,7 @@ export const orm: Track = {
         ch("o3-c2", "view-verify", "The upgrade runs with no error, but the new field is not on screen. What is the most likely reason?", "The arch is valid but the field sits in the wrong group or hidden by an expression. Only opening the view shows it", ["The field does not exist", "The module was not installed", "The ORM cache is full"], "Loading checks names against the model. It cannot tell you where the field lands. Validate visually or with a tour.", src("19.0","addons/base/models/ir_ui_view.py (_validate_attributes)")),
         ch("o3-c3", "groups", "You gate a button with groups=\"account.group_account_user\". What do you check first?", "implied_ids, to know which groups inherit it", ["Whether the button has a tooltip", "The module's load order", "Whether the button is type=\"action\""], "Group hierarchies decide who actually sees the node. Pick the group after reading them.", doc("19.0","security")),
         ch("o3-c4", "xpath", "Which position changes one attribute of a core node without replacing it?", "attributes", ["replace", "inside", "move"], "attributes touches only what you set. replace takes over the whole node and will collide with other modules that extend it.", src("19.0","odoo/tools/template_inheritance.py (apply_inheritance_specs)")),
+        ch("o3-c5", "view-verify", "A form button has type=\"object\" and name=\"action_auto_reconcile\", but the model has no such method. When do you find out?", "At module install or update, when the view is validated", ["Only when a user clicks it", "Never, the button is ignored", "At the next restart only"], "The view validator checks that the method exists on the model and is public. A broken button fails the update, not production use.", src("17.0", "odoo/addons/base/models/ir_ui_view.py (_validate_tag_button)")),
       ],
     },
     {
@@ -92,6 +93,18 @@ export const orm: Track = {
         ch("o5-c3", "data-from-js", "A widget needs a value that belongs to the record being edited. Where does it read it?", "From this.props.record.data, after adding the field to the view", ["From a JSON-RPC call on mount", "From a bus_service channel", "From localStorage"], "Data that is part of the record already travels with it."),
         ch("o5-c4", "data-from-js", "A widget needs a value from the server that changes while the page is open. Which tool?", "bus_service for pushed updates. The orm service for a one-off call. Not polling every few seconds", ["setInterval with an orm call", "A page reload timer", "A global variable set by the server"], "Polling loads the server for every open tab.", doc("19.0","services")),
         ch("o5-c5", "owl-first", "In 17, how do you add a field widget?", "Register the component in the fields registry, instead of patching an existing one", ["Edit the core JS file", "Subclass the form view in Python", "Add an xpath to the QWeb template of the whole app"], "Views, field widgets and client actions are OWL components looked up in registries.", doc("19.0","registries")),
+      ],
+    },
+    {
+      id: "orm-6",
+      title: "Tiers and OWL",
+      brief: "Say where each piece lives, and how the client keeps its state and reaches the server.",
+      caveat: "Short answers. The exam asks you to explain this in a few sentences.",
+      cards: [
+        ch("o6-c1", "architecture", "How do you describe Odoo's architecture in one line?", "Three tiers: PostgreSQL for data, Python with the ORM for business logic, and OWL in the browser, talking to the server over RPC", ["Two tiers: Python renders HTML for the browser", "Python talks to the database through the client", "A REST API in front of the ORM"], "The docs name the data, logic and presentation tiers. The logic tier is exclusively Python.", doc("17.0", "architecture")),
+        ch("o6-c2", "architecture", "What is a models.Model class?", "A Python class that stands for a PostgreSQL table, managed by the ORM", ["A view definition in XML", "A JS component", "A SQL file run at install"], "You rarely write SQL. You declare the model and its fields, and the ORM creates the table and the queries.", doc("17.0", "architecture")),
+        ch("o5-c6", "owl-first", "Why does editing one cell in a list not re-render the whole list in the 17 client?", "OWL reactivity is fine-grained: a component re-renders when the state it reads changes", ["The server sends only that cell", "The browser caches the list", "The list is not an OWL component"], "A component that reads useState state is subscribed to it and re-renders when that state changes. In 17 the views, field widgets and client actions are all OWL components.", src("17.0", "doc/v2/reference/reactivity.md", "odoo/owl")),
+        ch("o5-c7", "owl-first", "In an OWL component, how do you reach the orm or bus service?", "const orm = useService(\"orm\"), inside setup()", ["import it from the model", "this.env.orm.search()", "A global odoo.orm object"], "useService is the hook for using a service in a component. State uses useState in the same place.", doc("17.0", "services")),
       ],
     },
   ],
