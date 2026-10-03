@@ -36,9 +36,9 @@ more than they teach. A card-and-ledger UI is enough.
 
 ## Decisions I made (correct any of them)
 
-1. **Spanish UI, English technical terms.** Your exam is in Spanish. No i18n layer.
+1. **English only.** The exam is in Spanish. The app and the cards are in English. No i18n layer.
 2. **Version deltas are the spine.** One concept is learned as "what changed between 16, 17, 18, 19 and 20", not as a separate pass per version.
-3. **Source-cited cards.** Every card names a version and a source. A claim I could not verify is tagged `[unverified]` and shown that way.
+3. **Source-cited cards.** The source is the odoo/documentation repo, branches 16.0 to 20.0, and the odoo/odoo source where the docs are silent. Every card names a version and a source. A claim I could not verify is tagged `[unverified]` and shown that way.
 4. **Static app, no backend.** Progress lives in localStorage. Deploy to Vercel from the CLI that is already installed.
 5. **The project is a normal repo, not a Captain task.** It would be created under `~/git/`, with its own commit rules.
 
@@ -90,6 +90,6 @@ Each milestone ends with: `vitest` passing, one browser run of the real flow, an
 - **Scope.** The sim could grow into a mini accounting engine. It stops at invoice, payment and reconciliation.
 - **Exam errors.** Your answers may contain mistakes of their own. I will flag any I find against the docs instead of copying them.
 
-## What I need from you
+## Status
 
-Say "go" and I start M1. If you want a different cut of tracks, or English instead of Spanish, say so first.
+M1 to M3 are built. `docs/map/` holds a cited map of four areas, checked by sampling facts against the sources. The Field notes track is built from its question seeds. Next: more cards from the maps, and the exam's outdated answers fixed in the ledger and version tracks.

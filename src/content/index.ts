@@ -1,10 +1,11 @@
 import { ledger } from "./ledger";
+import { notes } from "./notes";
 import { ops } from "./ops";
 import { orm } from "./orm";
 import type { Card, Level, Track } from "./types";
 import { versions } from "./versions";
 
-export const TRACKS: Track[] = [ledger, orm, versions, ops];
+export const TRACKS: Track[] = [ledger, orm, versions, notes, ops];
 
 export const ALL_LEVELS: Level[] = TRACKS.flatMap((t) => t.levels);
 export const ALL_CARDS: Card[] = ALL_LEVELS.flatMap((l) => l.cards);
