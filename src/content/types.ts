@@ -1,10 +1,8 @@
 export type Source = {
   /** Odoo version the claim holds for, e.g. "18.0" or "19.4 (Online)". */
   version: string;
-  /** Where it was read: a docs path, or "exam" for the author's own answers. */
+  /** Where the claim was read: a docs path or an odoo/odoo source path. */
   ref: string;
-  /** False when the claim was not read in the documentation repo. */
-  verified: boolean;
 };
 
 type Base = {

@@ -140,10 +140,7 @@ function Results({ prepared, answers, gated, footer }: { prepared: Prepared[]; a
 function SourceTag({ source }: { source?: Source }) {
   if (!source) return null;
   return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-[var(--muted)]">
-      <span className={`rounded-full px-2 py-0.5 font-bold ${source.verified ? "bg-[var(--good-soft)] text-[var(--good)]" : "bg-[var(--bad-soft)] text-[var(--bad)]"}`}>
-        {source.verified ? "docs-verified" : "unverified"}
-      </span>
+    <p className="mt-2 text-xs text-[var(--muted)]">
       Odoo {source.version} · {source.ref}
     </p>
   );
@@ -196,11 +193,11 @@ type ViewProps<K extends Prepared["kind"]> = {
 
 const shake = { x: [0, -8, 8, -5, 5, 0], transition: { duration: 0.35 } };
 
-function Prompt({ label, children }: { label: string; children: React.ReactNode }) {
+function Prompt({ label, children }: { label?: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
-      <p className="eyebrow">{label}</p>
-      <p className="mt-1.5 text-xl font-bold leading-snug sm:text-2xl">{children}</p>
+      {label && <p className="eyebrow">{label}</p>}
+      <p className={`${label ? "mt-1.5 " : ""}text-xl font-bold leading-snug sm:text-2xl`}>{children}</p>
     </div>
   );
 }
@@ -226,7 +223,7 @@ function ChoiceView({ item, onGraded, onNext, last }: ViewProps<"choice">) {
 
   return (
     <div>
-      <Prompt label={isPredict ? "Predict, then watch the ledger" : "Choose"}>{item.prompt}</Prompt>
+      <Prompt label={isPredict ? undefined : "Choose"}>{item.prompt}</Prompt>
       {item.scene && (
         <div className="mb-4">
           <LedgerStage scene={item.scene} reveal={picked !== null} />

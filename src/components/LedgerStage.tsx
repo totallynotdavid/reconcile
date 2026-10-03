@@ -12,7 +12,7 @@ const OUT = [0.23, 1, 0.32, 1] as const;
 // Seconds. The demo paces each match so the eye can follow it. The quiz uses
 // the fast pace because the learner sees it on every card.
 const PACE = {
-  demo: { lead: 0.1, gap: 0.55, fill: 0.45 },
+  demo: { lead: 0.2, gap: 0.95, fill: 0.7 },
   quick: { lead: 0.05, gap: 0.3, fill: 0.28 },
 } as const;
 

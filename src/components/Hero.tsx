@@ -11,10 +11,10 @@ const SCENES = [
 ] as const;
 
 // Milliseconds. Events land, the question holds, the answer plays, then it rests.
-const LAND_FIRST = 700;
-const LAND_EVERY = 450;
-const ASK_HOLD = 1500;
-const REST = 2200;
+const LAND_FIRST = 900;
+const LAND_EVERY = 750;
+const ASK_HOLD = 2400;
+const REST = 3200;
 const OUT = [0.23, 1, 0.32, 1] as const;
 
 type Phase = "landing" | "asking" | "answering";
@@ -71,7 +71,7 @@ export function Hero() {
       <LedgerStage scene={scene} reveal={answering} shown={shown} live={false} />
       <div className="mt-3 flex gap-6 text-sm font-semibold" aria-hidden>
         <Step label="Predict" on={phase === "asking"} fill={phase !== "landing"} duration={ASK_HOLD / 1000} ease="linear" reset={index} />
-        <Step label="Watch" on={answering} fill={answering} duration={0.4} ease={OUT} reset={index} />
+        <Step label="Watch" on={answering} fill={answering} duration={0.7} ease={OUT} reset={index} />
       </div>
     </div>
   );

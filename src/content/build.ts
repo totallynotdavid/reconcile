@@ -6,23 +6,28 @@ const DOCS = {
   upgrade: "content/developer/reference/upgrades/upgrade_scripts.rst",
   views: "content/developer/reference/user_interface/view_architectures.rst",
   views16: "content/developer/reference/backend/views.rst",
+  orm: "content/developer/reference/backend/orm.rst",
+  security: "content/developer/reference/backend/security.rst",
+  jsref: "content/developer/reference/frontend/javascript_reference.rst",
+  services: "content/developer/reference/frontend/services.rst",
+  registries: "content/developer/reference/frontend/registries.rst",
+  owl: "content/developer/reference/frontend/owl_components.rst",
+  debug: "content/developer/reference/frontend/framework_overview.rst",
+  upgradeService: "content/administration/upgrade.rst",
 } as const;
 
 export const doc = (version: string, file: keyof typeof DOCS): Source => ({
   version,
   ref: `odoo/documentation ${DOCS[file]}`,
-  verified: true,
 });
 
-export const map = (area: string, version: string, verified = true): Source => ({
+export const map = (area: string, version: string): Source => ({
   version,
   ref: `docs/map/${area}.md (cited to odoo/documentation or odoo/odoo source)`,
-  verified,
 });
 
-export const exam = (version = "17.0"): Source => ({ version, ref: "exam", verified: false });
-
-export const unverified = (version: string, note: string): Source => ({ version, ref: note, verified: false });
+/** A claim read in odoo/odoo source rather than the documentation. */
+export const src = (version: string, path: string): Source => ({ version, ref: `odoo/odoo ${path}` });
 
 /** The correct option goes first; the session shuffles the order. */
 export function ch(
