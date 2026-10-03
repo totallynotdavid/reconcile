@@ -24,6 +24,7 @@ export const versions: Track = {
         ch("v1-c4", "v16-17", "On 16.3, _read_group got a new signature. What does that mean for a 16.2 custom module?", "Calls written for the old signature break and need rewriting", ["Nothing, it is internal", "Only read_group changed", "Only the SQL changed, not the Python arguments"], "A signature change in a method you call or override is a break even when the name is the same.", doc("16.3 (Online)", "ormLog")),
         ch("v1-c5", "v16-17", "OWL 2 arrived in 16. What follows for custom JS written in the legacy widget style?", "It has to be rewritten as OWL components", ["Nothing, both run forever", "Only the XML templates change", "Only the CSS needs to change"], "Legacy JS does not survive the move. 17 is OWL for views, field widgets and client actions.", doc("17.0","owl")),
         ch("v1-c6", "v16-17", "Old code declares def method(self, cr, uid, ids, context=None). In which version was that style removed?", "13.0. The record API from 8.0 ran beside it until then", ["8.0, when the new API arrived", "15.0", "17.0, together with attrs"], "12.0 api.py still has the cr_uid decorators. 13.0 api.py has none, so only the record API is left.", src("13.0", "odoo/api.py")),
+        ch("v1-c7", "v16-17", "In which version did the record API (api.py with self as a recordset) arrive?", "8.0. It did not exist in 7.0", ["7.0", "10.0", "13.0"], "8.0 is the first branch with odoo/api.py. The cr, uid, ids style kept working beside it until 13.0.", src("8.0", "openerp/api.py")),
       ],
     },
     {
