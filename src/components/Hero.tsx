@@ -16,7 +16,6 @@ const LAND_EVERY = 750;
 const ASK_HOLD = 2400;
 const REST = 3200;
 const OUT = [0.23, 1, 0.32, 1] as const;
-const SLOTS = Math.max(...SCENES.map((s) => s.events.length));
 
 type Phase = "landing" | "asking" | "answering";
 
@@ -69,7 +68,7 @@ export function Hero() {
   const answering = phase === "answering";
   return (
     <div ref={root}>
-      <LedgerStage scene={scene} reveal={answering} shown={shown} slots={SLOTS} live={false} />
+      <LedgerStage scene={scene} reveal={answering} shown={shown} live={false} />
       <div className="mt-3 flex gap-6 text-sm font-semibold" aria-hidden>
         <Step label="Predict" on={phase === "asking"} fill={phase !== "landing"} duration={ASK_HOLD / 1000} ease="linear" reset={index} />
         <Step label="Watch" on={answering} fill={answering} duration={0.7} ease={OUT} reset={index} />
