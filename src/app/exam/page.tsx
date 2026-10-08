@@ -5,6 +5,7 @@ import { Gate } from "@/components/Hydrate";
 import { Session } from "@/components/Session";
 import { ALL_CARDS } from "@/content";
 import { rng } from "@/learning/session";
+import { useRun } from "@/learning/run";
 import { useProgress } from "@/learning/store";
 
 const EXAM_SIZE = 20;
@@ -20,6 +21,7 @@ export default function Exam() {
 function ExamRound() {
   const finishExam = useProgress((s) => s.finishExam);
   const [seed] = useState(() => Date.now());
+  const run = useRun();
   const cards = useMemo(() => {
     const rand = rng(seed);
     return [...ALL_CARDS].sort(() => rand() - 0.5).slice(0, EXAM_SIZE);
@@ -32,6 +34,7 @@ function ExamRound() {
       <Session
         cards={cards}
         seed={seed}
+        run={run}
         onDone={finishExam}
         footer={(_, retry) => (
           <div className="flex gap-3">
