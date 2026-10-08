@@ -1,5 +1,5 @@
 "use client";
-import { Exam, Stack } from "@phosphor-icons/react";
+import { Exam, Stack, Trophy } from "@phosphor-icons/react";
 import Link from "next/link";
 import { dueConcepts } from "@/learning/leitner";
 import { useProgress } from "@/learning/store";
@@ -24,6 +24,10 @@ export function Nav() {
         <Link href="/exam/" className="flex items-center gap-1.5 rounded-xl px-3 py-2 hover:bg-[var(--odoo-soft)]">
           <Exam size={18} weight="bold" />
           Exam
+        </Link>
+        <Link href="/leaderboard/" aria-label="Leaderboard" className="flex items-center gap-1.5 rounded-xl px-3 py-2 hover:bg-[var(--odoo-soft)]">
+          <Trophy size={18} weight="bold" />
+          <span className="hidden sm:inline">Leaderboard</span>
         </Link>
       </nav>
     </header>

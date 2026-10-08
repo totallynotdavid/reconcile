@@ -1,4 +1,4 @@
 import type { NextConfig } from "next";
 
-const config: NextConfig = { output: "export", trailingSlash: true };
+const config: NextConfig = { trailingSlash: true };
 export default config;

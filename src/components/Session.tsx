@@ -3,10 +3,13 @@ import { ArrowRight, CheckCircle, Fire, Star, XCircle } from "@phosphor-icons/re
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { Source } from "@/content/types";
+import type { Choice } from "@/learning/judge";
 import { PASS_RATIO } from "@/learning/leitner";
 import { type Answer, stars as starsOf } from "@/learning/progress";
+import type { Run, RunState } from "@/learning/run";
 import { type Prepared, prepare } from "@/learning/session";
 import { LedgerStage } from "./LedgerStage";
+import { Ranking } from "./Ranking";
 
 type Props = {
   cards: Parameters<typeof prepare>[0][];
@@ -14,29 +17,37 @@ type Props = {
   /** When set, a score under the pass ratio counts as a fail. */
   gated?: boolean;
   onDone: (answers: Answer[]) => void;
+  /** Scores each round on the server for the leaderboard. Without it the session is local only. */
+  run?: Run;
   /** Rendered under the score when the session ends. */
   footer?: (passed: boolean, retry: () => void) => React.ReactNode;
 };
 
-type Result = Answer & { id: string };
+type Result = Answer & { id: string; choice: Choice };
 
-export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
+export function Session({ cards, seed, gated = true, onDone, run, footer }: Props) {
   const [round, setRound] = useState(0);
-  const prepared = useMemo(() => cards.map((c) => prepare(c, seed + round)), [cards, seed, round]);
+  const drawn = seed + round;
+  const prepared = useMemo(() => cards.map((c) => prepare(c, drawn)), [cards, drawn]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Result[]>([]);
   const [done, setDone] = useState(false);
   const current = prepared[index];
 
-  function record(correct: boolean) {
-    setAnswers((a) => [...a, { id: current.card.id, concept: current.card.concept, correct }]);
+  const begin = run?.begin;
+  useEffect(() => {
+    begin?.(prepared.map((p) => p.card.id), drawn);
+  }, [begin, prepared, drawn]);
+
+  function record(correct: boolean, choice: Choice) {
+    setAnswers((a) => [...a, { id: current.card.id, concept: current.card.concept, correct, choice }]);
   }
 
   function next() {
     if (index + 1 < prepared.length) return setIndex(index + 1);
-    const ok = answers.filter((a) => a.correct).length / answers.length >= PASS_RATIO;
     setDone(true);
     onDone(answers.map(({ concept, correct }) => ({ concept, correct })));
+    void run?.submit(answers.map(({ id, choice }) => ({ id, choice })));
   }
 
   function retry() {
@@ -46,7 +57,7 @@ export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
     setDone(false);
   }
 
-  if (done) return <Results prepared={prepared} answers={answers} gated={gated} footer={footer?.(passedOf(answers), retry)} />;
+  if (done) return <Results prepared={prepared} answers={answers} gated={gated} run={run?.state} footer={footer?.(passedOf(answers), retry)} />;
 
   let streak = 0;
   for (let i = answers.length - 1; i >= 0 && answers[i].correct; i--) streak++;
@@ -77,7 +88,7 @@ export function Session({ cards, seed, gated = true, onDone, footer }: Props) {
 
 const passedOf = (answers: Result[]) => answers.length > 0 && answers.filter((a) => a.correct).length / answers.length >= PASS_RATIO;
 
-function Results({ prepared, answers, gated, footer }: { prepared: Prepared[]; answers: Result[]; gated: boolean; footer: React.ReactNode }) {
+function Results({ prepared, answers, gated, run, footer }: { prepared: Prepared[]; answers: Result[]; gated: boolean; run?: RunState; footer: React.ReactNode }) {
   const correct = answers.filter((a) => a.correct).length;
   const ratio = correct / answers.length;
   const ok = ratio >= PASS_RATIO;
@@ -121,6 +132,7 @@ function Results({ prepared, answers, gated, footer }: { prepared: Prepared[]; a
         <h2 className="text-2xl font-extrabold">{!gated ? "Done" : ok ? "Level passed" : "Not yet"}</h2>
         {gated && !ok && <p className="max-w-sm text-sm text-[var(--muted)]">You need {Math.round(PASS_RATIO * 100)}%. A retry brings new numbers on the predict cards.</p>}
       </div>
+      {run && <Ranking state={run} />}
       {missed.length > 0 && (
         <div className="space-y-3">
           <h3 className="eyebrow">Missed</h3>
@@ -178,7 +190,7 @@ function Feedback({ item, correct, onNext, last }: { item: Prepared; correct: bo
   );
 }
 
-function Card({ item, onGraded, onNext, last }: { item: Prepared; onGraded: (ok: boolean) => void; onNext: () => void; last: boolean }) {
+function Card({ item, onGraded, onNext, last }: { item: Prepared; onGraded: (ok: boolean, choice: Choice) => void; onNext: () => void; last: boolean }) {
   if (item.kind === "choice") return <ChoiceView item={item} onGraded={onGraded} onNext={onNext} last={last} />;
   if (item.kind === "bug") return <BugView item={item} onGraded={onGraded} onNext={onNext} last={last} />;
   return <TriageView item={item} onGraded={onGraded} onNext={onNext} last={last} />;
@@ -186,7 +198,7 @@ function Card({ item, onGraded, onNext, last }: { item: Prepared; onGraded: (ok:
 
 type ViewProps<K extends Prepared["kind"]> = {
   item: Extract<Prepared, { kind: K }>;
-  onGraded: (ok: boolean) => void;
+  onGraded: (ok: boolean, choice: Choice) => void;
   onNext: () => void;
   last: boolean;
 };
@@ -209,7 +221,7 @@ function ChoiceView({ item, onGraded, onNext, last }: ViewProps<"choice">) {
   function pick(i: number) {
     if (picked !== null) return;
     setPicked(i);
-    onGraded(i === item.answer);
+    onGraded(i === item.answer, [i]);
   }
 
   useEffect(() => {
@@ -259,7 +271,7 @@ function BugView({ item, onGraded, onNext, last }: ViewProps<"bug">) {
               disabled={picked !== null}
               onClick={() => {
                 setPicked(i);
-                onGraded(i === item.answer);
+                onGraded(i === item.answer, [i]);
               }}
               className={`flex w-full cursor-pointer gap-3 border-b border-[var(--line)] px-4 py-2.5 text-left last:border-b-0 enabled:hover:bg-[var(--odoo-soft)] ${state}`}
             >
@@ -278,12 +290,14 @@ function TriageView({ item, onGraded, onNext, last }: ViewProps<"triage">) {
   const [step, setStep] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [slips, setSlips] = useState(0);
+  const [choice, setChoice] = useState<Choice>([]);
   const [finished, setFinished] = useState(false);
   const s = item.steps[step];
 
   function pick(i: number) {
     if (picked !== null) return;
     setPicked(i);
+    setChoice((c) => [...c, i]);
     if (i !== s.answer) setSlips((n) => n + 1);
   }
 
@@ -293,7 +307,7 @@ function TriageView({ item, onGraded, onNext, last }: ViewProps<"triage">) {
       return setPicked(null);
     }
     setFinished(true);
-    onGraded(slips === 0);
+    onGraded(slips === 0, choice);
   }
 
   return (

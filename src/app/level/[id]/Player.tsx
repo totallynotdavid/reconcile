@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Gate } from "@/components/Hydrate";
 import { Session } from "@/components/Session";
 import { findLevel } from "@/content";
+import { useRun } from "@/learning/run";
 import { useProgress } from "@/learning/store";
 
 export function LevelPlayer({ id }: { id: string }) {
@@ -20,6 +21,7 @@ function Level({ id }: { id: string }) {
   const finishLevel = useProgress((s) => s.finishLevel);
   const [started, setStarted] = useState(false);
   const [seed] = useState(() => Date.now());
+  const run = useRun();
   if (!found) return <p>Unknown level.</p>;
   const { track, level, index } = found;
   const nextLevel = track.levels[index + 1];
@@ -64,6 +66,7 @@ function Level({ id }: { id: string }) {
     <Session
       cards={level.cards}
       seed={seed}
+      run={run}
       onDone={(answers) => finishLevel(id, answers)}
       footer={(passed, retry) => (
         <div className="flex gap-3">

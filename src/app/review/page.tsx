@@ -7,6 +7,7 @@ import { cardsForConcept } from "@/content";
 import type { Card } from "@/content/types";
 import { dueConcepts } from "@/learning/leitner";
 import { rng } from "@/learning/session";
+import { useRun } from "@/learning/run";
 import { useProgress } from "@/learning/store";
 
 const MAX_CARDS = 8;
@@ -24,6 +25,7 @@ function ReviewRound() {
   const finishReview = useProgress((s) => s.finishReview);
   const [seed] = useState(() => Date.now());
   const [snapshot] = useState(() => concepts);
+  const run = useRun();
 
   /** One card per due concept, weakest first. Same-topic cards are mixed in by the shuffle of concepts of equal box. */
   const cards = useMemo(() => {
@@ -54,6 +56,7 @@ function ReviewRound() {
       <Session
         cards={cards}
         seed={seed}
+        run={run}
         gated={false}
         onDone={finishReview}
         footer={() => (
