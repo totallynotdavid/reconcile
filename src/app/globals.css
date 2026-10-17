@@ -23,16 +23,29 @@
 
 html {
   min-height: 100%;
-  background: linear-gradient(170deg, #f9e8d3 0%, #efe0ec 45%, #dcd6f0 100%) fixed;
+  background: linear-gradient(170deg, #f9e8d3 0%, #efe0ec 45%, #dcd6f0 100%)
+    fixed;
 }
 
 body {
   color: var(--ink);
   font-family: var(--font-sans);
   background:
-    repeating-linear-gradient(0deg, transparent 0 31px, rgb(113 75 103 / 0.05) 31px 32px),
-    radial-gradient(60rem 30rem at 85% -10%, rgb(242 160 61 / 0.18), transparent 60%),
-    radial-gradient(50rem 28rem at -10% 20%, rgb(113 75 103 / 0.12), transparent 60%);
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 31px,
+      rgb(113 75 103 / 0.05) 31px 32px
+    ),
+    radial-gradient(
+      60rem 30rem at 85% -10%,
+      rgb(242 160 61 / 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      50rem 28rem at -10% 20%,
+      rgb(113 75 103 / 0.12),
+      transparent 60%
+    );
   min-height: 100vh;
 }
 
@@ -46,7 +59,9 @@ pre,
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 22px;
-  box-shadow: 0 1px 0 #fff inset, 0 10px 30px -12px rgb(79 50 72 / 0.25);
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 10px 30px -12px rgb(79 50 72 / 0.25);
 }
 
 .btn {
@@ -57,7 +72,10 @@ pre,
   text-align: left;
   font-weight: 600;
   box-shadow: 0 4px 0 var(--line);
-  transition: transform 0.08s, box-shadow 0.08s, background 0.1s;
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s,
+    background 0.1s;
   cursor: pointer;
 }
 .btn:hover:not(:disabled) {
@@ -132,7 +150,11 @@ pre,
 }
 
 .hatch {
-  background: repeating-linear-gradient(135deg, #fbe3bd 0 6px, #f6cf92 6px 12px);
+  background: repeating-linear-gradient(
+    135deg,
+    #fbe3bd 0 6px,
+    #f6cf92 6px 12px
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -10,7 +10,9 @@ export const TRACKS: Track[] = [ledger, orm, versions, notes, ops];
 export const ALL_LEVELS: Level[] = TRACKS.flatMap((t) => t.levels);
 export const ALL_CARDS: Card[] = ALL_LEVELS.flatMap((l) => l.cards);
 
-export function findLevel(id: string): { track: Track; level: Level; index: number } | undefined {
+export function findLevel(
+  id: string,
+): { track: Track; level: Level; index: number } | undefined {
   for (const track of TRACKS) {
     const index = track.levels.findIndex((l) => l.id === id);
     if (index >= 0) return { track, level: track.levels[index], index };

@@ -4,9 +4,29 @@ import { type LedgerEvent, type Settlement, settle } from "@/sim/ledger";
 export type Scene = { total: number; events: LedgerEvent[] };
 
 export type Prepared =
-  | { card: Card; kind: "choice"; prompt: string; options: string[]; answer: number; trace?: string[]; scene?: Scene }
-  | { card: Card; kind: "bug"; prompt: string; language: string; lines: string[]; answer: number }
-  | { card: Card; kind: "triage"; prompt: string; steps: (TriageStep & { options: string[]; answer: number })[] };
+  | {
+      card: Card;
+      kind: "choice";
+      prompt: string;
+      options: string[];
+      answer: number;
+      trace?: string[];
+      scene?: Scene;
+    }
+  | {
+      card: Card;
+      kind: "bug";
+      prompt: string;
+      language: string;
+      lines: string[];
+      answer: number;
+    }
+  | {
+      card: Card;
+      kind: "triage";
+      prompt: string;
+      steps: (TriageStep & { options: string[]; answer: number })[];
+    };
 
 /** mulberry32: small seeded generator so a session is repeatable. */
 export function rng(seed: number): () => number {
@@ -27,13 +47,20 @@ export function hashSeed(text: string, salt: number): number {
 }
 
 /** Shuffles options and returns where the correct one went. */
-export function shuffleOptions(options: string[], answer: number, rand: () => number) {
+export function shuffleOptions(
+  options: string[],
+  answer: number,
+  rand: () => number,
+) {
   const order = options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
-  return { options: order.map((i) => options[i]), answer: order.indexOf(answer) };
+  return {
+    options: order.map((i) => options[i]),
+    answer: order.indexOf(answer),
+  };
 }
 
 export const money = (n: number) => n.toLocaleString("en-US");
@@ -45,8 +72,15 @@ const unique = (list: string[]) => [...new Set(list)];
 
 function describe(s: Settlement): string[] {
   const lines = s.lines.map((l) => `${l.label}: ${money(l.amount)}`);
-  const matches = s.partials.map((p) => `${p.credit} matched ${money(p.amount)} against the invoice`);
-  return [...lines, ...matches, `Invoice amount_residual: ${money(s.residual)}`, `payment_state: ${s.paymentState}`];
+  const matches = s.partials.map(
+    (p) => `${p.credit} matched ${money(p.amount)} against the invoice`,
+  );
+  return [
+    ...lines,
+    ...matches,
+    `Invoice amount_residual: ${money(s.residual)}`,
+    `payment_state: ${s.paymentState}`,
+  ];
 }
 
 function predict(scenario: PredictScenario, rand: () => number) {
@@ -61,11 +95,19 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `A posted invoice for ${money(total)} receives one payment of ${money(paid)}. What is amount_residual?`;
       const correct = money(s.residual);
       const wrong = [money(total), money(paid), money(total + paid)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
+      return {
+        prompt,
+        options: unique([correct, ...wrong]),
+        trace: describe(s),
+        scene: { total, events },
+      };
     }
     case "two-partials": {
       const first = pick(rand, 100, total - 100, 100);
-      events.push({ type: "payment", amount: first }, { type: "payment", amount: total - first });
+      events.push(
+        { type: "payment", amount: first },
+        { type: "payment", amount: total - first },
+      );
       const s = settle(total, events);
       const prompt = `An invoice for ${money(total)} is paid in two payments: ${money(first)}, then ${money(total - first)}. What exists in the database afterwards?`;
       const correct = `${s.partials.length} partial reconciles and a full reconcile`;
@@ -74,7 +116,12 @@ function predict(scenario: PredictScenario, rand: () => number) {
         `${s.partials.length} partial reconciles and no full reconcile`,
         "1 partial reconcile and a full reconcile",
       ];
-      return { prompt, options: [correct, ...wrong], trace: describe(s), scene: { total, events } };
+      return {
+        prompt,
+        options: [correct, ...wrong],
+        trace: describe(s),
+        scene: { total, events },
+      };
     }
     case "overpay": {
       const extra = pick(rand, 100, 500, 100);
@@ -83,17 +130,34 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `A customer pays ${money(total + extra)} against an invoice for ${money(total)}. How much stays open as credit on the payment line?`;
       const correct = money(s.openCredit);
       const wrong = ["0", money(total), money(total + extra)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
+      return {
+        prompt,
+        options: unique([correct, ...wrong]),
+        trace: describe(s),
+        scene: { total, events },
+      };
     }
     case "credit-note": {
       const credit = pick(rand, 100, total / 2, 100);
       const pay = pick(rand, 100, total - credit - 100, 100);
-      events.push({ type: "credit", amount: credit }, { type: "payment", amount: pay });
+      events.push(
+        { type: "credit", amount: credit },
+        { type: "payment", amount: pay },
+      );
       const s = settle(total, events);
       const prompt = `An invoice for ${money(total)} gets a credit note of ${money(credit)} and then a payment of ${money(pay)}. What is amount_residual?`;
       const correct = money(s.residual);
-      const wrong = [money(total - pay), money(total - credit), money(credit + pay)];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
+      const wrong = [
+        money(total - pay),
+        money(total - credit),
+        money(credit + pay),
+      ];
+      return {
+        prompt,
+        options: unique([correct, ...wrong]),
+        trace: describe(s),
+        scene: { total, events },
+      };
     }
     case "waiting-bank": {
       events.push({ type: "payment", amount: total, bankReconciled: false });
@@ -101,7 +165,12 @@ function predict(scenario: PredictScenario, rand: () => number) {
       const prompt = `An invoice for ${money(total)} is paid in full by a payment that no bank statement line has matched yet. What is payment_state?`;
       const correct = s.paymentState;
       const wrong = ["paid", "partial", "not_paid"];
-      return { prompt, options: unique([correct, ...wrong]), trace: describe(s), scene: { total, events } };
+      return {
+        prompt,
+        options: unique([correct, ...wrong]),
+        trace: describe(s),
+        scene: { total, events },
+      };
     }
   }
 }
@@ -116,16 +185,33 @@ export function prepare(card: Card, seed: number): Prepared {
     case "predict": {
       const p = predict(card.scenario, rand);
       const mixed = shuffleOptions(p.options, 0, rand);
-      return { card, kind: "choice", prompt: p.prompt, ...mixed, trace: p.trace, scene: p.scene };
+      return {
+        card,
+        kind: "choice",
+        prompt: p.prompt,
+        ...mixed,
+        trace: p.trace,
+        scene: p.scene,
+      };
     }
     case "bug":
-      return { card, kind: "bug", prompt: card.prompt, language: card.language, lines: card.lines, answer: card.answer };
+      return {
+        card,
+        kind: "bug",
+        prompt: card.prompt,
+        language: card.language,
+        lines: card.lines,
+        answer: card.answer,
+      };
     case "triage":
       return {
         card,
         kind: "triage",
         prompt: card.prompt,
-        steps: card.steps.map((s) => ({ ...s, ...shuffleOptions(s.options, s.answer, rand) })),
+        steps: card.steps.map((s) => ({
+          ...s,
+          ...shuffleOptions(s.options, s.answer, rand),
+        })),
       };
   }
 }

@@ -1,10 +1,21 @@
 import type { NextRequest } from "next/server";
 import { standings, submitAttempt } from "@/server/board";
 import { getDb } from "@/server/db";
-import { allowed, badRequest, currentPlayer, failure, json, readBody, tooMany } from "@/server/http";
+import {
+  allowed,
+  badRequest,
+  currentPlayer,
+  failure,
+  json,
+  readBody,
+  tooMany,
+} from "@/server/http";
 
 /** Scores a finished run from its picks. The body carries the picks, never a score or a seed. */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> },
+) {
   const body = await readBody(request);
   if (!body) return badRequest();
   const player = currentPlayer(request);
@@ -16,5 +27,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const result = submitAttempt(db, player.id, token, body, now);
   if (!result.ok) return failure(result);
   const { ok: _, ...award } = result;
-  return json({ ...award, week: standings(db, "week", player.id, now).me, all: standings(db, "all", player.id, now).me });
+  return json({
+    ...award,
+    week: standings(db, "week", player.id, now).me,
+    all: standings(db, "all", player.id, now).me,
+  });
 }

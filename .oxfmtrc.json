@@ -1,0 +1,12 @@
+{
+  "printWidth": 80,
+  "proseWrap": "always",
+  "ignorePatterns": [
+    ".next/**",
+    "out/**",
+    "data/**",
+    "bun.lock",
+    "next-env.d.ts",
+    "AGENTS.md"
+  ]
+}

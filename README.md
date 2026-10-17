@@ -15,11 +15,17 @@ source file that backs it. Practice cards carry no source.
 ## Develop
 
 ```bash
-bun install
-bun run dev    # http://localhost:3000
-bun run test   # ledger, scheduler, session, progress, scoring, ranking and the session screen
-bun run build && bun run start
+mise install                     # Bun and Node, pinned in mise.toml
+mise run install
+mise run dev
+mise run test                    # ledger, scheduler, session, progress, scoring, ranking and the session screen
+mise run check                   # lint, typecheck, test and build, as CI runs them
+mise run build && mise run start
 ```
+
+`mise run lint` skips `AGENTS.md`, listed in `.oxfmtrc.json`: `next dev`
+rewrites its Next.js block with its own line wrapping on every start, so a
+formatted copy would fail the check again.
 
 Study progress lives in localStorage and works without a server. The leaderboard
 needs the Node server (`next start`), Node 22.18 or newer, and a persistent disk

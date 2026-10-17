@@ -43,7 +43,10 @@ export function useRoutes() {
   });
 }
 
-type Handler = (request: NextRequest, context: { params: Promise<{ token: string }> }) => Promise<Response>;
+type Handler = (
+  request: NextRequest,
+  context: { params: Promise<{ token: string }> },
+) => Promise<Response>;
 
 /** The real route handlers, found the way Next finds them: by path and method. */
 function handlerFor(method: string, pathname: string): Handler | undefined {
@@ -54,7 +57,11 @@ function handlerFor(method: string, pathname: string): Handler | undefined {
     "/api/leaderboard/": leaderboard,
     "/api/admin/players/": admin,
   };
-  const route: Partial<Record<string, Handler>> | undefined = TOKEN_PATH.test(pathname) ? attemptByToken : routes[pathname];
+  const route: Partial<Record<string, Handler>> | undefined = TOKEN_PATH.test(
+    pathname,
+  )
+    ? attemptByToken
+    : routes[pathname];
   return route?.[method];
 }
 
@@ -64,19 +71,40 @@ const TOKEN_PATH = /^\/api\/attempts\/([^/]+)\/$/;
  * A browser talking to the real route handlers. It keeps the player cookie, as a browser does, and sends the
  * headers a page on the same site sends. The database is whatever `DB_PATH` names.
  */
-export function browser(options: { address?: string; headers?: Record<string, string> } = {}) {
+export function browser(
+  options: { address?: string; headers?: Record<string, string> } = {},
+) {
   let cookie = "";
 
-  async function request(method: string, url: string, body?: unknown): Promise<Response> {
+  async function request(
+    method: string,
+    url: string,
+    body?: unknown,
+  ): Promise<Response> {
     const target = new URL(url, ORIGIN);
-    const headers = new Headers({ Origin: ORIGIN, Host: new URL(ORIGIN).host, ...options.headers });
+    const headers = new Headers({
+      Origin: ORIGIN,
+      Host: new URL(ORIGIN).host,
+      ...options.headers,
+    });
     if (body !== undefined) headers.set("Content-Type", "application/json");
     if (cookie) headers.set("Cookie", cookie);
     if (options.address) headers.set("X-Forwarded-For", options.address);
-    const context = { params: Promise.resolve({ token: target.pathname.match(TOKEN_PATH)?.[1] ?? "" }) };
+    const context = {
+      params: Promise.resolve({
+        token: target.pathname.match(TOKEN_PATH)?.[1] ?? "",
+      }),
+    };
     const handler = handlerFor(method, target.pathname);
     if (!handler) throw new Error(`no route for ${method} ${target.pathname}`);
-    const response = await handler(new NextRequest(target, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), context);
+    const response = await handler(
+      new NextRequest(target, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }),
+      context,
+    );
     for (const line of response.headers.getSetCookie()) {
       const [name, value] = line.split(";")[0].split("=");
       if (name === COOKIE) cookie = value ? `${name}=${value}` : "";
@@ -100,9 +128,25 @@ export function browser(options: { address?: string; headers?: Record<string, st
 }
 
 /** A moderator's call to the admin route. */
-export async function moderator(token: string, body?: unknown): Promise<Response> {
-  const headers = new Headers({ Authorization: `Bearer ${token}`, Origin: ORIGIN, Host: new URL(ORIGIN).host });
-  if (body === undefined) return admin.GET(new NextRequest(new URL("/api/admin/players/", ORIGIN), { headers }));
+export async function moderator(
+  token: string,
+  body?: unknown,
+): Promise<Response> {
+  const headers = new Headers({
+    Authorization: `Bearer ${token}`,
+    Origin: ORIGIN,
+    Host: new URL(ORIGIN).host,
+  });
+  if (body === undefined)
+    return admin.GET(
+      new NextRequest(new URL("/api/admin/players/", ORIGIN), { headers }),
+    );
   headers.set("Content-Type", "application/json");
-  return admin.POST(new NextRequest(new URL("/api/admin/players/", ORIGIN), { method: "POST", headers, body: JSON.stringify(body) }));
+  return admin.POST(
+    new NextRequest(new URL("/api/admin/players/", ORIGIN), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    }),
+  );
 }

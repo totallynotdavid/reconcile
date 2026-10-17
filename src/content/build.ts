@@ -1,4 +1,10 @@
-import type { BugCard, ChoiceCard, Source, TriageCard, TriageStep } from "./types";
+import type {
+  BugCard,
+  ChoiceCard,
+  Source,
+  TriageCard,
+  TriageStep,
+} from "./types";
 
 const DOCS = {
   ormLog: "content/developer/reference/backend/orm/changelog.rst",
@@ -13,7 +19,8 @@ const DOCS = {
   registries: "content/developer/reference/frontend/registries.rst",
   owl: "content/developer/reference/frontend/owl_components.rst",
   debug: "content/developer/reference/frontend/framework_overview.rst",
-  architecture: "content/developer/tutorials/server_framework_101/01_architecture.rst",
+  architecture:
+    "content/developer/tutorials/server_framework_101/01_architecture.rst",
   upgradeService: "content/administration/upgrade.rst",
 } as const;
 
@@ -28,7 +35,11 @@ export const map = (area: string, version: string): Source => ({
 });
 
 /** A claim read in source rather than the documentation. The repo is odoo/odoo unless given. */
-export const src = (version: string, path: string, repo = "odoo/odoo"): Source => ({ version, ref: `${repo} ${path}` });
+export const src = (
+  version: string,
+  path: string,
+  repo = "odoo/odoo",
+): Source => ({ version, ref: `${repo} ${path}` });
 
 /** The correct option goes first; the session shuffles the order. */
 export function ch(
@@ -40,7 +51,16 @@ export function ch(
   why: string,
   source?: Source,
 ): ChoiceCard {
-  return { kind: "choice", id, concept, prompt, options: [correct, ...wrong], answer: 0, why, source };
+  return {
+    kind: "choice",
+    id,
+    concept,
+    prompt,
+    options: [correct, ...wrong],
+    answer: 0,
+    why,
+    source,
+  };
 }
 
 export function bug(
@@ -53,10 +73,25 @@ export function bug(
   why: string,
   source?: Source,
 ): BugCard {
-  return { kind: "bug", id, concept, prompt, language, lines, answer, why, source };
+  return {
+    kind: "bug",
+    id,
+    concept,
+    prompt,
+    language,
+    lines,
+    answer,
+    why,
+    source,
+  };
 }
 
-export function step(clue: string, correct: string, wrong: string[], why: string): TriageStep {
+export function step(
+  clue: string,
+  correct: string,
+  wrong: string[],
+  why: string,
+): TriageStep {
   return { clue, options: [correct, ...wrong], answer: 0, why };
 }
 

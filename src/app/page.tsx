@@ -6,9 +6,9 @@ import { Hero } from "@/components/Hero";
 import { Gate } from "@/components/Hydrate";
 import { TRACKS } from "@/content";
 import type { Level, Track } from "@/content/types";
-import { INTERVALS, dueConcepts } from "@/learning/leitner";
+import { INTERVALS } from "@/learning/leitner";
 import { isUnlocked, stars } from "@/learning/progress";
-import { useProgress } from "@/learning/store";
+import { useDueCount, useProgress } from "@/learning/store";
 
 export default function Home() {
   return (
@@ -21,7 +21,9 @@ export default function Home() {
 function nextLevel(progress: ReturnType<typeof useProgress.getState>) {
   for (const track of TRACKS) {
     const ids = track.levels.map((l) => l.id);
-    const i = track.levels.findIndex((l, n) => isUnlocked(progress, ids, n) && !progress.levels[l.id]?.passed);
+    const i = track.levels.findIndex(
+      (l, n) => isUnlocked(progress, ids, n) && !progress.levels[l.id]?.passed,
+    );
     if (i >= 0) return track.levels[i];
   }
   return null;
@@ -29,7 +31,7 @@ function nextLevel(progress: ReturnType<typeof useProgress.getState>) {
 
 function Tracks() {
   const progress = useProgress();
-  const due = dueConcepts(progress.concepts, Date.now()).length;
+  const due = useDueCount();
   const tracked = Object.entries(progress.concepts);
   const resume = nextLevel(progress);
   const passed = Object.values(progress.levels).filter((l) => l.passed).length;
@@ -39,19 +41,30 @@ function Tracks() {
     <div className="space-y-10">
       <section className="grid items-center gap-6 pt-4 lg:grid-cols-2">
         <div>
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl">Odoo, for people who ship it.</h1>
-          <p className="mt-4 text-xl text-[var(--muted)]">Odoo 16 to 20. Predict what happens, then watch it.</p>
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl">
+            Odoo, for people who ship it.
+          </h1>
+          <p className="mt-4 text-xl text-[var(--muted)]">
+            Odoo 16 to 20. Predict what happens, then watch it.
+          </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {resume && (
-              <Link href={`/level/${resume.id}/`} className="btn btn-primary flex items-center gap-2 px-6 py-3 text-lg">
-                {passed === 0 ? "Start" : "Continue"} <ArrowRight size={20} weight="bold" />
+              <Link
+                href={`/level/${resume.id}/`}
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 text-lg"
+              >
+                {passed === 0 ? "Start" : "Continue"}{" "}
+                <ArrowRight size={20} weight="bold" />
               </Link>
             )}
             <Link href="/review/" className="btn px-5 py-3 text-lg">
               {due > 0 ? `Review ${due} due` : "Nothing due"}
             </Link>
             <Link href="/exam/" className="btn px-5 py-3 text-lg">
-              Mixed exam{progress.exam ? ` · ${progress.exam.best}/${progress.exam.total}` : ""}
+              Mixed exam
+              {progress.exam
+                ? ` · ${progress.exam.best}/${progress.exam.total}`
+                : ""}
             </Link>
           </div>
           <p className="mt-4 text-sm text-[var(--muted)]">
@@ -68,16 +81,25 @@ function Tracks() {
       {tracked.length > 0 && (
         <section>
           <h2 className="text-xl font-extrabold">Memory</h2>
-          <p className="text-sm text-[var(--muted)]">Box 1 is weakest. Review interval grows with the box: {INTERVALS.slice(2).join(", ")} days.</p>
+          <p className="text-sm text-[var(--muted)]">
+            Box 1 is weakest. Review interval grows with the box:{" "}
+            {INTERVALS.slice(2).join(", ")} days.
+          </p>
           <ul className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
             {tracked
               .sort(([, a], [, b]) => a.box - b.box)
               .map(([slug, s]) => (
-                <li key={slug} className="panel flex items-center justify-between px-4 py-2.5">
+                <li
+                  key={slug}
+                  className="panel flex items-center justify-between px-4 py-2.5"
+                >
                   <span className="mono text-xs">{slug}</span>
                   <span className="flex gap-1" aria-label={`box ${s.box} of 6`}>
                     {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <span key={n} className={`size-2.5 rounded-full ${n <= s.box ? "bg-[var(--odoo)]" : "bg-[var(--line)]"}`} />
+                      <span
+                        key={n}
+                        className={`size-2.5 rounded-full ${n <= s.box ? "bg-[var(--odoo)]" : "bg-[var(--line)]"}`}
+                      />
                     ))}
                   </span>
                 </li>
@@ -92,7 +114,9 @@ function Tracks() {
 function TrackPath({ track }: { track: Track }) {
   const progress = useProgress();
   const ids = track.levels.map((l) => l.id);
-  const firstOpen = track.levels.findIndex((l, i) => isUnlocked(progress, ids, i) && !progress.levels[l.id]?.passed);
+  const firstOpen = track.levels.findIndex(
+    (l, i) => isUnlocked(progress, ids, i) && !progress.levels[l.id]?.passed,
+  );
   const [selected, setSelected] = useState(Math.max(0, firstOpen));
   const level = track.levels[selected];
   const open = isUnlocked(progress, ids, selected);
@@ -105,8 +129,19 @@ function TrackPath({ track }: { track: Track }) {
         <ol className="flex flex-wrap items-start gap-x-2 gap-y-4">
           {track.levels.map((l, i) => (
             <li key={l.id} className="flex items-start gap-2">
-              <Node level={l} index={i} unlocked={isUnlocked(progress, ids, i)} active={i === selected} onSelect={() => setSelected(i)} />
-              {i < track.levels.length - 1 && <span aria-hidden className="mt-7 hidden h-0 w-6 border-t-[3px] border-dotted border-[var(--line)] sm:block" />}
+              <Node
+                level={l}
+                index={i}
+                unlocked={isUnlocked(progress, ids, i)}
+                active={i === selected}
+                onSelect={() => setSelected(i)}
+              />
+              {i < track.levels.length - 1 && (
+                <span
+                  aria-hidden
+                  className="mt-7 hidden h-0 w-6 border-t-[3px] border-dotted border-[var(--line)] sm:block"
+                />
+              )}
             </li>
           ))}
         </ol>
@@ -116,19 +151,53 @@ function TrackPath({ track }: { track: Track }) {
   );
 }
 
-function Node({ level, index, unlocked, active, onSelect }: { level: Level; index: number; unlocked: boolean; active: boolean; onSelect: () => void }) {
+function Node({
+  level,
+  index,
+  unlocked,
+  active,
+  onSelect,
+}: {
+  level: Level;
+  index: number;
+  unlocked: boolean;
+  active: boolean;
+  onSelect: () => void;
+}) {
   const result = useProgress((s) => s.levels[level.id]);
   const done = result?.passed;
-  const tone = done ? "bg-[var(--good)] text-white shadow-[0_4px_0_#157a52]" : unlocked ? "bg-[var(--amber)] text-[#3a2208] shadow-[0_4px_0_var(--amber-deep)]" : "bg-[var(--line)] text-[var(--muted)] shadow-[0_4px_0_#d5c9d2]";
+  const tone = done
+    ? "bg-[var(--good)] text-white shadow-[0_4px_0_#157a52]"
+    : unlocked
+      ? "bg-[var(--amber)] text-[#3a2208] shadow-[0_4px_0_var(--amber-deep)]"
+      : "bg-[var(--line)] text-[var(--muted)] shadow-[0_4px_0_#d5c9d2]";
   const n = stars(result);
   return (
-    <button onClick={onSelect} aria-pressed={active} aria-label={level.title} className="flex w-24 cursor-pointer flex-col items-center gap-1.5 text-center">
-      <span className={`grid size-14 place-items-center rounded-full text-lg font-extrabold transition-transform ${tone} ${active ? "scale-110 ring-4 ring-[var(--odoo)]/25" : ""}`}>
-        {done ? <Check size={26} weight="bold" /> : unlocked ? index + 1 : <Lock size={22} weight="fill" />}
+    <button
+      onClick={onSelect}
+      aria-pressed={active}
+      aria-label={level.title}
+      className="flex w-24 cursor-pointer flex-col items-center gap-1.5 text-center"
+    >
+      <span
+        className={`grid size-14 place-items-center rounded-full text-lg font-extrabold transition-transform ${tone} ${active ? "scale-110 ring-4 ring-[var(--odoo)]/25" : ""}`}
+      >
+        {done ? (
+          <Check size={26} weight="bold" />
+        ) : unlocked ? (
+          index + 1
+        ) : (
+          <Lock size={22} weight="fill" />
+        )}
       </span>
       <span className="flex gap-0.5">
         {[1, 2, 3].map((s) => (
-          <Star key={s} size={13} weight="fill" color={s <= n ? "var(--amber)" : "var(--line)"} />
+          <Star
+            key={s}
+            size={13}
+            weight="fill"
+            color={s <= n ? "var(--amber)" : "var(--line)"}
+          />
         ))}
       </span>
       <span className="text-xs font-semibold leading-tight">{level.title}</span>
@@ -144,12 +213,19 @@ function LevelDetail({ level, unlocked }: { level: Level; unlocked: boolean }) {
         <h3 className="text-lg font-extrabold">{level.title}</h3>
         <p className="text-sm">{level.brief}</p>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          {level.cards.length} cards{result ? ` · best ${result.best}/${result.total} · ${result.attempts} ${result.attempts === 1 ? "try" : "tries"}` : ""}
+          {level.cards.length} cards
+          {result
+            ? ` · best ${result.best}/${result.total} · ${result.attempts} ${result.attempts === 1 ? "try" : "tries"}`
+            : ""}
         </p>
       </div>
       {unlocked ? (
-        <Link href={`/level/${level.id}/`} className="btn btn-plum flex items-center justify-center gap-2 px-6">
-          {result?.passed ? "Play again" : "Play"} <ArrowRight size={18} weight="bold" />
+        <Link
+          href={`/level/${level.id}/`}
+          className="btn btn-plum flex items-center justify-center gap-2 px-6"
+        >
+          {result?.passed ? "Play again" : "Play"}{" "}
+          <ArrowRight size={18} weight="bold" />
         </Link>
       ) : (
         <span className="flex items-center gap-2 text-sm font-semibold text-[var(--muted)]">

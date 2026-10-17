@@ -26,7 +26,12 @@ export type Line = {
 
 export type PartialReconcile = { credit: string; amount: number };
 
-export type PaymentState = "not_paid" | "partial" | "in_payment" | "paid" | "reversed";
+export type PaymentState =
+  | "not_paid"
+  | "partial"
+  | "in_payment"
+  | "paid"
+  | "reversed";
 
 export type Settlement = {
   lines: Line[];
@@ -45,7 +50,13 @@ export type Settlement = {
 };
 
 export function settle(total: number, events: LedgerEvent[]): Settlement {
-  const invoice: Line = { kind: "invoice", label: "Invoice", amount: total, residual: total, bankReconciled: true };
+  const invoice: Line = {
+    kind: "invoice",
+    label: "Invoice",
+    amount: total,
+    residual: total,
+    bankReconciled: true,
+  };
   const lines: Line[] = [invoice];
   const partials: PartialReconcile[] = [];
   let payments = 0;
@@ -53,13 +64,15 @@ export function settle(total: number, events: LedgerEvent[]): Settlement {
 
   for (const event of events) {
     const n = lines.filter((l) => l.kind === event.type).length + 1;
-    const label = event.type === "payment" ? `Payment ${n}` : `Credit note ${n}`;
+    const label =
+      event.type === "payment" ? `Payment ${n}` : `Credit note ${n}`;
     const line: Line = {
       kind: event.type,
       label,
       amount: event.amount,
       residual: event.amount,
-      bankReconciled: event.type === "payment" ? (event.bankReconciled ?? true) : true,
+      bankReconciled:
+        event.type === "payment" ? (event.bankReconciled ?? true) : true,
     };
     lines.push(line);
     const matched = Math.min(invoice.residual, line.residual);
@@ -72,7 +85,9 @@ export function settle(total: number, events: LedgerEvent[]): Settlement {
     }
   }
 
-  const openCredit = lines.filter((l) => l.kind !== "invoice").reduce((sum, l) => sum + l.residual, 0);
+  const openCredit = lines
+    .filter((l) => l.kind !== "invoice")
+    .reduce((sum, l) => sum + l.residual, 0);
   return {
     lines,
     partials,
@@ -85,10 +100,18 @@ export function settle(total: number, events: LedgerEvent[]): Settlement {
   };
 }
 
-function stateOf(total: number, residual: number, lines: Line[], payments: number, credits: number): PaymentState {
+function stateOf(
+  total: number,
+  residual: number,
+  lines: Line[],
+  payments: number,
+  credits: number,
+): PaymentState {
   if (residual === total) return "not_paid";
   if (residual > 0) return "partial";
   if (payments === 0 && credits > 0) return "reversed";
-  const waitingForBank = lines.some((l) => l.kind === "payment" && !l.bankReconciled && l.amount > l.residual);
+  const waitingForBank = lines.some(
+    (l) => l.kind === "payment" && !l.bankReconciled && l.amount > l.residual,
+  );
   return waitingForBank ? "in_payment" : "paid";
 }

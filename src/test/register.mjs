@@ -10,8 +10,16 @@ const files = (base) => [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, base];
 registerHooks({
   resolve(specifier, context, next) {
     const relative = /^\.\.?\//.test(specifier) && !/\.[a-z]+$/.test(specifier);
-    const target = specifier.startsWith("@/") ? new URL(specifier.slice(2), src) : relative ? new URL(specifier, context.parentURL) : null;
-    const found = target && files(fileURLToPath(target)).find((file) => existsSync(file) && statSync(file).isFile());
+    const target = specifier.startsWith("@/")
+      ? new URL(specifier.slice(2), src)
+      : relative
+        ? new URL(specifier, context.parentURL)
+        : null;
+    const found =
+      target &&
+      files(fileURLToPath(target)).find(
+        (file) => existsSync(file) && statSync(file).isFile(),
+      );
     return next(found ? pathToFileURL(found).href : specifier, context);
   },
 });

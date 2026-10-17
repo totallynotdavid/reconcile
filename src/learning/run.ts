@@ -2,8 +2,19 @@
 import { useMemo, useState } from "react";
 import type { Choice } from "./judge";
 
-export type Standing = { nickname: string; rank: number | null; points: number; hidden: boolean };
-export type Award = { correct: number; total: number; points: number; week: Standing | null; all: Standing | null };
+export type Standing = {
+  nickname: string;
+  rank: number | null;
+  points: number;
+  hidden: boolean;
+};
+export type Award = {
+  correct: number;
+  total: number;
+  points: number;
+  week: Standing | null;
+  all: Standing | null;
+};
 
 export type RunState =
   | { status: "idle" }
@@ -19,12 +30,21 @@ export type Send = (url: string, body: unknown) => Promise<Response>;
 export const OFFLINE = "Could not reach the server.";
 export const UNREADABLE = "The server sent a reply that could not be read.";
 
-const post: Send = (url, body) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const post: Send = (url, body) =>
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
 /** The JSON body of a reply, or null when there is none or it is not JSON. A bad body is not a network failure. */
-const bodyOf = async (res: Response): Promise<Record<string, unknown> | null> => {
+const bodyOf = async (
+  res: Response,
+): Promise<Record<string, unknown> | null> => {
   const body: unknown = await res.json().catch(() => null);
-  return body && typeof body === "object" ? (body as Record<string, unknown>) : null;
+  return body && typeof body === "object"
+    ? (body as Record<string, unknown>)
+    : null;
 };
 
 const errorOf = async (res: Response) => {
@@ -33,7 +53,9 @@ const errorOf = async (res: Response) => {
 };
 
 const isAward = (body: Record<string, unknown> | null): body is Award =>
-  typeof body?.correct === "number" && typeof body.total === "number" && typeof body.points === "number";
+  typeof body?.correct === "number" &&
+  typeof body.total === "number" &&
+  typeof body.points === "number";
 
 /**
  * One scored run at a time. `begin` tells the server which cards are about to be played and with which
@@ -50,7 +72,11 @@ export function createRun(send: Send, set: (state: RunState) => void) {
     return (state: RunState) => mine === generation && set(state);
   };
 
-  async function open(cardIds: string[], seed: number, report: (state: RunState) => void) {
+  async function open(
+    cardIds: string[],
+    seed: number,
+    report: (state: RunState) => void,
+  ) {
     const fail = (error: string) => {
       report({ status: "failed", error });
       return null;
@@ -90,7 +116,11 @@ export function createRun(send: Send, set: (state: RunState) => void) {
     }
     if (!res.ok) return report({ status: "failed", error: await errorOf(res) });
     const award = await bodyOf(res);
-    report(isAward(award) ? { status: "scored", award } : { status: "failed", error: UNREADABLE });
+    report(
+      isAward(award)
+        ? { status: "scored", award }
+        : { status: "failed", error: UNREADABLE },
+    );
   };
 
   return { begin, submit };
@@ -99,7 +129,10 @@ export function createRun(send: Send, set: (state: RunState) => void) {
 export function useRun() {
   const [state, setState] = useState<RunState>({ status: "idle" });
   const run = useMemo(() => createRun(post, setState), []);
-  return useMemo(() => ({ state, begin: run.begin, submit: run.submit }), [state, run]);
+  return useMemo(
+    () => ({ state, begin: run.begin, submit: run.submit }),
+    [state, run],
+  );
 }
 
 export type Run = ReturnType<typeof useRun>;

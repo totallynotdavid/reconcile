@@ -46,7 +46,10 @@ export type Db = DatabaseSync;
 
 /** True when a write lost to a UNIQUE or PRIMARY KEY constraint, which another connection may have just won. */
 export function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Error && error.message.startsWith("UNIQUE constraint failed");
+  return (
+    error instanceof Error &&
+    error.message.startsWith("UNIQUE constraint failed")
+  );
 }
 
 /**
@@ -69,10 +72,14 @@ export function exclusively<T>(db: Db, work: () => T): T {
 export function openDb(file: string): Db {
   if (file !== ":memory:") mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
-  db.exec("PRAGMA busy_timeout = 3000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+  db.exec(
+    "PRAGMA busy_timeout = 3000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;",
+  );
   // The version is read under the write lock, so two processes starting together migrate once.
   exclusively(db, () => {
-    const { user_version: version } = db.prepare("PRAGMA user_version").get() as { user_version: number };
+    const { user_version: version } = db
+      .prepare("PRAGMA user_version")
+      .get() as { user_version: number };
     for (let i = version; i < MIGRATIONS.length; i++) {
       db.exec(MIGRATIONS[i]);
       db.exec(`PRAGMA user_version = ${i + 1}`);
@@ -81,16 +88,18 @@ export function openDb(file: string): Db {
   return db;
 }
 
-const globalDb = globalThis as typeof globalThis & { __reconcileDb?: Db };
+const globalDb = globalThis as typeof globalThis & { reconcileDb?: Db };
 
 /** One connection per process. It survives dev hot reloads. */
 export function getDb(): Db {
-  globalDb.__reconcileDb ??= openDb(process.env.DB_PATH ?? path.join(process.cwd(), "data", "reconcile.db"));
-  return globalDb.__reconcileDb;
+  globalDb.reconcileDb ??= openDb(
+    process.env.DB_PATH ?? path.join(process.cwd(), "data", "reconcile.db"),
+  );
+  return globalDb.reconcileDb;
 }
 
 /** Closes the process's connection. The next `getDb` opens `DB_PATH` again. */
 export function closeDb(): void {
-  globalDb.__reconcileDb?.close();
-  delete globalDb.__reconcileDb;
+  globalDb.reconcileDb?.close();
+  delete globalDb.reconcileDb;
 }

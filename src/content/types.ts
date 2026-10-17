@@ -30,7 +30,12 @@ export type BugCard = Base & {
   answer: number;
 };
 
-export type TriageStep = { clue: string; options: string[]; answer: number; why: string };
+export type TriageStep = {
+  clue: string;
+  options: string[];
+  answer: number;
+  why: string;
+};
 
 export type TriageCard = Base & {
   kind: "triage";
@@ -63,4 +68,9 @@ export type Level = {
   cards: Card[];
 };
 
-export type Track = { id: string; title: string; summary: string; levels: Level[] };
+export type Track = {
+  id: string;
+  title: string;
+  summary: string;
+  levels: Level[];
+};

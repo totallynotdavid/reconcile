@@ -1,7 +1,17 @@
 import type { NextRequest } from "next/server";
 import { createPlayer, deletePlayer, renamePlayer } from "@/server/board";
 import { getDb } from "@/server/db";
-import { badRequest, clearPlayerCookie, currentPlayer, failure, json, readBody, reserve, setPlayerCookie, tooMany } from "@/server/http";
+import {
+  badRequest,
+  clearPlayerCookie,
+  currentPlayer,
+  failure,
+  json,
+  readBody,
+  reserve,
+  setPlayerCookie,
+  tooMany,
+} from "@/server/http";
 
 /** Who the cookie says you are, or null. */
 export async function GET(request: NextRequest) {
@@ -12,13 +22,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await readBody(request);
   if (!body) return badRequest();
-  if (currentPlayer(request)) return json({ error: "You already have a nickname." }, 409);
+  if (currentPlayer(request))
+    return json({ error: "You already have a nickname." }, 409);
   const spend = reserve(request, "join");
   if (!spend) return tooMany();
   const result = createPlayer(getDb(), body.nickname, Date.now());
   if (!result.ok) return failure(result);
   spend();
-  return setPlayerCookie(json({ player: result.player }, 201), result.player.id);
+  return setPlayerCookie(
+    json({ player: result.player }, 201),
+    result.player.id,
+  );
 }
 
 export async function PATCH(request: NextRequest) {
