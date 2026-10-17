@@ -27,7 +27,6 @@ function ReviewRound() {
   const [snapshot] = useState(() => concepts);
   const run = useRun();
 
-  /** One card per due concept, weakest first. Same-topic cards are mixed in by the shuffle of concepts of equal box. */
   const cards = useMemo(() => {
     const rand = rng(seed);
     return dueConcepts(snapshot, seed)

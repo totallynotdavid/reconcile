@@ -3,7 +3,6 @@ import { flagged, moderate } from "@/server/board";
 import { getDb } from "@/server/db";
 import { allowed, failure, isModerator, json, tooMany } from "@/server/http";
 
-/** Only failed attempts spend the budget, so guessing the token is slow and a moderator is never locked out. */
 function refuse(request: NextRequest) {
   if (isModerator(request)) return null;
   return allowed(request, "admin")

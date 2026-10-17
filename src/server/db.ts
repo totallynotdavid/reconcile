@@ -98,7 +98,6 @@ export function getDb(): Db {
   return globalDb.reconcileDb;
 }
 
-/** Closes the process's connection. The next `getDb` opens `DB_PATH` again. */
 export function closeDb(): void {
   globalDb.reconcileDb?.close();
   delete globalDb.reconcileDb;

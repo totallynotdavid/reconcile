@@ -54,7 +54,6 @@ function useNow(): number {
   return now;
 }
 
-/** How many concepts are due for review now. */
 export function useDueCount(): number {
   const concepts = useProgress((s) => s.concepts);
   const now = useNow();

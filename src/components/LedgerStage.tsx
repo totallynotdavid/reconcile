@@ -103,11 +103,8 @@ function useReveal(
   return { owed: total - applied, done: landed };
 }
 
-/**
- * A tray of received payments above the invoice. On reveal, each token drops into
- * the invoice bar at the share it settles. The card squashes on impact, the owed
- * amount steps down, and what stays hatched is what is owed.
- * `shown` is how many events have landed in the tray. Leave it out to show them all with no entrance.
+/** `shown` counts events that have landed in the tray.
+ * Omit it to show all events without an entrance animation.
  */
 export function LedgerStage({
   scene,

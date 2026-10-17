@@ -11,7 +11,6 @@ import {
   tooMany,
 } from "@/server/http";
 
-/** Scores a finished run from its picks. The body carries the picks, never a score or a seed. */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
