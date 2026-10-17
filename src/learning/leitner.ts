@@ -1,7 +1,7 @@
 export const DAY = 86_400_000;
 /** Review interval in days for each box. Box 1 is due immediately. */
 export const INTERVALS = [0, 0, 1, 2, 4, 8, 16] as const;
-export const MAX_BOX = INTERVALS.length - 1;
+const MAX_BOX = INTERVALS.length - 1;
 export const PASS_RATIO = 0.8;
 
 export type ConceptState = { box: number; due: number };
@@ -15,7 +15,7 @@ export function grade(
   return { box, due: now + INTERVALS[box] * DAY };
 }
 
-export function isDue(state: ConceptState | undefined, now: number): boolean {
+function isDue(state: ConceptState | undefined, now: number): boolean {
   return !!state && state.due <= now;
 }
 

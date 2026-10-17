@@ -1,7 +1,7 @@
 import { type ConceptState, grade, passed } from "./leitner";
 
 export type Answer = { concept: string; correct: boolean };
-export type LevelResult = {
+type LevelResult = {
   best: number;
   total: number;
   passed: boolean;

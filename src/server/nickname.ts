@@ -1,4 +1,4 @@
-export const NICK_MIN = 3;
+const NICK_MIN = 3;
 export const NICK_MAX = 20;
 
 const SHAPE = /^[A-Za-z0-9](?:[A-Za-z0-9 _.-]*[A-Za-z0-9])?$/;
@@ -34,7 +34,7 @@ export const nicknameKey = (nickname: string) =>
 const fold = (nickname: string) =>
   nicknameKey(nickname).replace(/[013457]/g, (c) => LEET[c]);
 
-export type NicknameCheck =
+type NicknameCheck =
   | { ok: true; nickname: string }
   | { ok: false; error: string };
 

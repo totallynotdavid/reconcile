@@ -10,10 +10,10 @@ export const POINTS_PER_CARD = 10;
 /** No one reads a card, thinks and answers faster than this. A run quicker than it per card is a script. */
 export const MIN_MS_PER_CARD = 2000;
 export const ATTEMPT_TTL = 2 * 60 * 60 * 1000;
-export const MAX_CARDS_PER_ATTEMPT = 25;
+const MAX_CARDS_PER_ATTEMPT = 25;
 export const MAX_OPEN_ATTEMPTS = 20;
 export const HIDE_AT_REPORTS = 3;
-export const BOARD_SIZE = 50;
+const BOARD_SIZE = 50;
 
 const CARDS = new Map<string, Card>(ALL_CARDS.map((c) => [c.id, c]));
 
@@ -34,9 +34,8 @@ const toPlayer = (row: PlayerRow): Player => ({
   hidden: !!row.hidden,
 });
 
-export const dayOf = (now: number) => new Date(now).toISOString().slice(0, 10);
+const dayOf = (now: number) => new Date(now).toISOString().slice(0, 10);
 
-/** Weeks run Monday 00:00 UTC to the next Monday. */
 export function weekStart(now: number): number {
   const d = new Date(now);
   const sinceMonday = (d.getUTCDay() + 6) % 7;
@@ -99,7 +98,6 @@ export function renamePlayer(
   return player ? { ok: true, player } : fail(404, "Unknown player.");
 }
 
-/** Removes the player and, by cascade, their credits, attempts and reports. */
 export function deletePlayer(db: Db, id: string): boolean {
   return db.prepare("DELETE FROM players WHERE id = ?").run(id).changes === 1;
 }
@@ -107,11 +105,6 @@ export function deletePlayer(db: Db, id: string): boolean {
 const validSeed = (seed: unknown): seed is number =>
   Number.isSafeInteger(seed) && (seed as number) >= 0;
 
-/**
- * Opens a timed attempt over the given cards and the seed they are drawn with. The seed is fixed here,
- * so the picks are judged against the run the player was shown. The clock starts here too, which is what
- * lets the server refuse a run that finished faster than a person can read.
- */
 export function startAttempt(
   db: Db,
   playerId: string,
@@ -164,11 +157,6 @@ type AttemptRow = {
   used_at: number | null;
 };
 
-/**
- * Grades a finished attempt from the picks alone, against the seed it was opened with. The client never
- * states a score, a verdict or a seed. A card pays once per player per UTC day, so repeating a level
- * cannot grow the total.
- */
 export function submitAttempt(
   db: Db,
   playerId: string,
@@ -237,7 +225,7 @@ export function submitAttempt(
 }
 
 export type Period = "all" | "week";
-export type Entry = {
+type Entry = {
   id: string;
   rank: number;
   nickname: string;
@@ -247,20 +235,16 @@ export type Entry = {
 export type Standings = {
   period: Period;
   entries: Entry[];
-  /** The caller's own line, even when it is outside the top. Null rank means no points in the period. */
+  /** Null rank means no points in the period. */
   me: {
     nickname: string;
     rank: number | null;
     points: number;
     hidden: boolean;
   } | null;
-  /** When the weekly board starts over. */
   resetsAt: number | null;
 };
 
-/**
- * Highest points first. Equal points go to whoever reached them first, so a rank is a distinct place.
- */
 export function standings(
   db: Db,
   period: Period,
@@ -313,10 +297,6 @@ export function standings(
   };
 }
 
-/**
- * Only players who have earned points may report, so a fresh throwaway identity cannot hide anyone.
- * Enough distinct reporters hide the entry until a moderator decides.
- */
 export function report(
   db: Db,
   reporterId: string,
@@ -351,7 +331,7 @@ export function report(
   });
 }
 
-export type Flagged = {
+type Flagged = {
   id: string;
   nickname: string;
   hidden: boolean;
@@ -360,7 +340,6 @@ export type Flagged = {
   reasons: string[];
 };
 
-/** Players someone reported or a moderator hid, most reported first. */
 export function flagged(db: Db): Flagged[] {
   const rows = db
     .prepare(
@@ -388,12 +367,8 @@ export function flagged(db: Db): Flagged[] {
   }));
 }
 
-export type Verdict = "hide" | "unhide" | "delete";
+type Verdict = "hide" | "unhide" | "delete";
 
-/**
- * Unhiding clears the reports against the player, or the next one would hide them again at once. On a
- * player who is not hidden it dismisses the reports.
- */
 export function moderate(
   db: Db,
   id: unknown,

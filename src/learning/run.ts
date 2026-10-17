@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import type { Choice } from "./judge";
 
-export type Standing = {
+type Standing = {
   nickname: string;
   rank: number | null;
   points: number;
@@ -57,11 +57,8 @@ const isAward = (body: Record<string, unknown> | null): body is Award =>
   typeof body.total === "number" &&
   typeof body.points === "number";
 
-/**
- * One scored run at a time. `begin` tells the server which cards are about to be played and with which
- * seed, which starts its clock. `submit` sends only the picks. The server decides what was right and what
- * it is worth. Play never depends on it: whatever goes wrong, the session runs and the state says why the
- * points are skipped.
+/** Play never depends on the server.
+ * The session runs on failure, and its state explains why points are skipped.
  */
 export function createRun(send: Send, set: (state: RunState) => void) {
   let generation = 0;

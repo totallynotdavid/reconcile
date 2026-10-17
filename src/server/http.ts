@@ -16,10 +16,6 @@ const DAY = 24 * HOUR;
 
 type Rule = { by: "ip" | "player" | "site"; max: number; ms: number };
 
-/**
- * Per-action budgets. An action is refused when any of its rules is used up. `ip` rules apply only when the
- * address is known (see `clientAddress`); the `site` rule counts everyone together and holds without a proxy.
- */
 export const LIMITS = {
   join: [
     { by: "ip", max: 5, ms: HOUR },
@@ -78,7 +74,6 @@ export function reserve(
     counters.forEach(({ key, rule }) => limiter.hit(key, rule.ms, now));
 }
 
-/** Checks the budget and spends one unit at once. */
 export function allowed(
   request: NextRequest,
   action: keyof typeof LIMITS,
@@ -92,11 +87,7 @@ export function allowed(
 export const tooMany = () =>
   json({ error: "Too many requests. Try again later." }, 429);
 
-/**
- * A page on another site can make the browser send our cookie, but it cannot read the reply and cannot
- * send an Origin that matches ours. State changes therefore need a matching Origin and a JSON body.
- */
-export function sameOrigin(request: NextRequest): boolean {
+function sameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return false;
   const host =

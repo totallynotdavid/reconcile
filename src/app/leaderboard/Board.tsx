@@ -145,7 +145,7 @@ function You({ me }: { me: NonNullable<Standings["me"]> }) {
         <Trophy size={28} weight="fill" className="text-[var(--amber-deep)]" />
         <div className="flex-1">
           <p className="font-extrabold">{me.nickname}</p>
-          <p className="text-sm text-[var(--muted)]" data-testid="own-rank">
+          <p className="text-sm text-[var(--muted)]">
             {me.hidden
               ? "Your entry is hidden while it is reviewed."
               : me.rank
