@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { DAY } from "./leitner";
-import { emptyProgress, isUnlocked, recordExam, recordLevel, recordReview, stars } from "./progress";
+import {
+  emptyProgress,
+  isUnlocked,
+  recordExam,
+  recordLevel,
+  recordReview,
+  stars,
+} from "./progress";
 
 const now = Date.UTC(2026, 9, 2);
 const right = (concept: string) => ({ concept, correct: true });
@@ -13,11 +20,21 @@ describe("progress", () => {
     expect(isUnlocked(data, ids, 0)).toBe(true);
     expect(isUnlocked(data, ids, 1)).toBe(false);
 
-    data = recordLevel(data, "a", [right("x"), right("x"), right("y"), wrong("y"), wrong("z")], now);
+    data = recordLevel(
+      data,
+      "a",
+      [right("x"), right("x"), right("y"), wrong("y"), wrong("z")],
+      now,
+    );
     expect(data.levels.a.passed).toBe(false);
     expect(isUnlocked(data, ids, 1)).toBe(false);
 
-    data = recordLevel(data, "a", [right("x"), right("x"), right("y"), right("y"), wrong("z")], now);
+    data = recordLevel(
+      data,
+      "a",
+      [right("x"), right("x"), right("y"), right("y"), wrong("z")],
+      now,
+    );
     expect(data.levels.a).toMatchObject({ passed: true, best: 4, attempts: 2 });
     expect(isUnlocked(data, ids, 1)).toBe(true);
   });
@@ -30,7 +47,12 @@ describe("progress", () => {
   });
 
   it("sends a missed concept back to box 1 and pushes a right one out", () => {
-    const data = recordLevel(emptyProgress(), "a", [right("x"), wrong("y")], now);
+    const data = recordLevel(
+      emptyProgress(),
+      "a",
+      [right("x"), wrong("y")],
+      now,
+    );
     expect(data.concepts.x).toEqual({ box: 2, due: now + DAY });
     expect(data.concepts.y).toEqual({ box: 1, due: now });
   });
@@ -45,7 +67,12 @@ describe("progress", () => {
   });
 
   it("awards stars from the best run", () => {
-    const result = (best: number, passed: boolean) => ({ best, total: 5, passed, attempts: 1 });
+    const result = (best: number, passed: boolean) => ({
+      best,
+      total: 5,
+      passed,
+      attempts: 1,
+    });
     expect(stars(undefined)).toBe(0);
     expect(stars(result(2, false))).toBe(0);
     expect(stars(result(3, false))).toBe(1);

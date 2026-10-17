@@ -37,25 +37,37 @@ function Level({ id }: { id: string }) {
     ].filter(Boolean);
     return (
       <div className="mx-auto max-w-2xl space-y-5">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--muted)] hover:text-[var(--ink)]">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--muted)] hover:text-[var(--ink)]"
+        >
           <ArrowLeft size={16} weight="bold" /> {track.title}
         </Link>
         <div>
           <p className="eyebrow">
             Level {index + 1} of {track.levels.length}
           </p>
-          <h1 className="mt-1 text-4xl font-extrabold tracking-tight">{level.title}</h1>
+          <h1 className="mt-1 text-4xl font-extrabold tracking-tight">
+            {level.title}
+          </h1>
           <p className="mt-2 text-lg text-[var(--muted)]">{level.brief}</p>
           <p className="mt-3 text-sm font-semibold">{parts.join(" · ")}</p>
         </div>
         <div className="panel flex gap-3 border-l-4 border-l-[var(--amber)] p-4">
-          <Warning size={22} weight="fill" className="mt-0.5 shrink-0 text-[var(--amber-deep)]" />
+          <Warning
+            size={22}
+            weight="fill"
+            className="mt-0.5 shrink-0 text-[var(--amber-deep)]"
+          />
           <div className="text-sm">
             <p className="font-bold">Where the model lies</p>
             <p className="mt-1 text-[var(--muted)]">{level.caveat}</p>
           </div>
         </div>
-        <button className="btn btn-primary w-full py-3 text-lg" onClick={() => setStarted(true)}>
+        <button
+          className="btn btn-primary w-full py-3 text-lg"
+          onClick={() => setStarted(true)}
+        >
           Start
         </button>
       </div>
@@ -76,7 +88,10 @@ function Level({ id }: { id: string }) {
             </button>
           )}
           {passed && nextLevel && (
-            <Link className="btn btn-primary px-6" href={`/level/${nextLevel.id}/`}>
+            <Link
+              className="btn btn-primary px-6"
+              href={`/level/${nextLevel.id}/`}
+            >
               Next level
             </Link>
           )}

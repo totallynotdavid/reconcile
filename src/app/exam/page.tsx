@@ -29,8 +29,12 @@ function ExamRound() {
 
   return (
     <div>
-      <h1 className="mb-1 text-3xl font-extrabold tracking-tight">Mixed exam</h1>
-      <p className="mb-5 text-[var(--muted)]">{EXAM_SIZE} cards from every track. Pass at 80%.</p>
+      <h1 className="mb-1 text-3xl font-extrabold tracking-tight">
+        Mixed exam
+      </h1>
+      <p className="mb-5 text-[var(--muted)]">
+        {EXAM_SIZE} cards from every track. Pass at 80%.
+      </p>
       <Session
         cards={cards}
         seed={seed}

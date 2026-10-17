@@ -8,6 +8,7 @@ describe("content", () => {
   });
 
   it("gives every level a sensible number of cards for one sitting", () => {
-    for (const level of ALL_LEVELS) expect(level.cards.length).toBeGreaterThanOrEqual(4);
+    for (const level of ALL_LEVELS)
+      expect(level.cards.length).toBeGreaterThanOrEqual(4);
   });
 });

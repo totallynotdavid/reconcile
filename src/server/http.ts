@@ -2,7 +2,13 @@ import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { type Fail, type Player, getPlayer } from "./board";
 import { getDb } from "./db";
-import { COOKIE, COOKIE_MAX_AGE, sessionSecret, sign, verify } from "./identity";
+import {
+  COOKIE,
+  COOKIE_MAX_AGE,
+  sessionSecret,
+  sign,
+  verify,
+} from "./identity";
 import { createLimiter } from "./limit";
 
 const HOUR = 60 * 60 * 1000;
@@ -31,7 +37,8 @@ export const LIMITS = {
 
 const limiter = createLimiter();
 
-export const json = (data: unknown, status = 200) => NextResponse.json(data, { status, headers: { "Cache-Control": "no-store" } });
+export const json = (data: unknown, status = 200) =>
+  NextResponse.json(data, { status, headers: { "Cache-Control": "no-store" } });
 
 export const failure = (f: Fail) => json({ error: f.error }, f.status);
 
@@ -49,25 +56,41 @@ function clientAddress(request: NextRequest): string | null {
  * is used up. Spending is separate so an action that fails for a reason of the caller's own (a taken
  * nickname) does not cost them anything.
  */
-export function reserve(request: NextRequest, action: keyof typeof LIMITS, playerId?: string): (() => void) | null {
+export function reserve(
+  request: NextRequest,
+  action: keyof typeof LIMITS,
+  playerId?: string,
+): (() => void) | null {
   const now = Date.now();
   const rules: readonly Rule[] = LIMITS[action];
   const counters = rules.flatMap((rule) => {
-    const who = rule.by === "site" ? "*" : rule.by === "ip" ? clientAddress(request) : playerId;
+    const who =
+      rule.by === "site"
+        ? "*"
+        : rule.by === "ip"
+          ? clientAddress(request)
+          : playerId;
     return who ? [{ key: `${action}:${rule.by}:${who}`, rule }] : [];
   });
-  if (!counters.every(({ key, rule }) => limiter.room(key, rule.max, now))) return null;
-  return () => counters.forEach(({ key, rule }) => limiter.hit(key, rule.ms, now));
+  if (!counters.every(({ key, rule }) => limiter.room(key, rule.max, now)))
+    return null;
+  return () =>
+    counters.forEach(({ key, rule }) => limiter.hit(key, rule.ms, now));
 }
 
 /** Checks the budget and spends one unit at once. */
-export function allowed(request: NextRequest, action: keyof typeof LIMITS, playerId?: string): boolean {
+export function allowed(
+  request: NextRequest,
+  action: keyof typeof LIMITS,
+  playerId?: string,
+): boolean {
   const spend = reserve(request, action, playerId);
   spend?.();
   return spend !== null;
 }
 
-export const tooMany = () => json({ error: "Too many requests. Try again later." }, 429);
+export const tooMany = () =>
+  json({ error: "Too many requests. Try again later." }, 429);
 
 /**
  * A page on another site can make the browser send our cookie, but it cannot read the reply and cannot
@@ -76,7 +99,10 @@ export const tooMany = () => json({ error: "Too many requests. Try again later."
 export function sameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return false;
-  const host = (process.env.TRUST_PROXY === "1" && request.headers.get("x-forwarded-host")) || request.headers.get("host");
+  const host =
+    (process.env.TRUST_PROXY === "1" &&
+      request.headers.get("x-forwarded-host")) ||
+    request.headers.get("host");
   try {
     return new URL(origin).host === host;
   } catch {
@@ -85,12 +111,17 @@ export function sameOrigin(request: NextRequest): boolean {
 }
 
 /** Parses a JSON object body from a same-origin request. Null means the request must be refused. */
-export async function readBody(request: NextRequest): Promise<Record<string, unknown> | null> {
+export async function readBody(
+  request: NextRequest,
+): Promise<Record<string, unknown> | null> {
   if (!sameOrigin(request)) return null;
-  if (!request.headers.get("content-type")?.startsWith("application/json")) return null;
+  if (!request.headers.get("content-type")?.startsWith("application/json"))
+    return null;
   try {
     const body = await request.json();
-    return body && typeof body === "object" && !Array.isArray(body) ? body : null;
+    return body && typeof body === "object" && !Array.isArray(body)
+      ? body
+      : null;
   } catch {
     return null;
   }
@@ -104,7 +135,10 @@ export function currentPlayer(request: NextRequest): Player | null {
   return id ? getPlayer(getDb(), id) : null;
 }
 
-export function setPlayerCookie(response: NextResponse, playerId: string): NextResponse {
+export function setPlayerCookie(
+  response: NextResponse,
+  playerId: string,
+): NextResponse {
   response.cookies.set(COOKIE, sign(playerId, sessionSecret()), {
     httpOnly: true,
     sameSite: "lax",

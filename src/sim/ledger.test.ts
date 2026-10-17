@@ -29,13 +29,17 @@ describe("settle", () => {
   });
 
   it("reports in_payment until the bank statement matches the payment", () => {
-    const s = settle(500, [{ type: "payment", amount: 500, bankReconciled: false }]);
+    const s = settle(500, [
+      { type: "payment", amount: 500, bankReconciled: false },
+    ]);
     expect(s.residual).toBe(0);
     expect(s.paymentState).toBe("in_payment");
   });
 
   it("keeps an unreconciled payment out of in_payment while the invoice is still open", () => {
-    const s = settle(500, [{ type: "payment", amount: 200, bankReconciled: false }]);
+    const s = settle(500, [
+      { type: "payment", amount: 200, bankReconciled: false },
+    ]);
     expect(s.paymentState).toBe("partial");
   });
 

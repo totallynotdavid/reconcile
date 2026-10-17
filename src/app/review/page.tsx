@@ -42,7 +42,10 @@ function ReviewRound() {
     return (
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">Nothing due</h1>
-        <p className="mt-2 text-sm">Finish a level to start the schedule. Concepts come back after 1, 2, 4, 8 and 16 days.</p>
+        <p className="mt-2 text-sm">
+          Finish a level to start the schedule. Concepts come back after 1, 2,
+          4, 8 and 16 days.
+        </p>
         <Link href="/" className="btn mt-4 inline-block px-4">
           Home
         </Link>

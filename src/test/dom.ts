@@ -8,10 +8,26 @@ const globals = globalThis as Record<string, unknown>;
 
 for (const key of Object.getOwnPropertyNames(win)) {
   if (key in globals) continue;
-  Object.defineProperty(globals, key, { configurable: true, writable: true, value: dom[key] });
+  Object.defineProperty(globals, key, {
+    configurable: true,
+    writable: true,
+    value: dom[key],
+  });
 }
-for (const key of ["window", "document", "navigator", "location", "history", "localStorage", "sessionStorage"]) {
-  Object.defineProperty(globals, key, { configurable: true, writable: true, value: dom[key] });
+for (const key of [
+  "window",
+  "document",
+  "navigator",
+  "location",
+  "history",
+  "localStorage",
+  "sessionStorage",
+]) {
+  Object.defineProperty(globals, key, {
+    configurable: true,
+    writable: true,
+    value: dom[key],
+  });
 }
 // happy-dom's Web Animations reject when an animation is cancelled; without them motion animates in JS.
 delete (dom.Element as { prototype: { animate?: unknown } }).prototype.animate;
