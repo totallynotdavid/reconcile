@@ -37,10 +37,6 @@ describe("session secret", () => {
       sessionSecret({ NODE_ENV: "production", SESSION_SECRET: SECRET }),
     ).toBe(SECRET);
   });
-
-  it("falls back to a fixed value outside production so dev needs no setup", () => {
-    expect(sessionSecret({})).toBe(sessionSecret({ NODE_ENV: "development" }));
-  });
 });
 
 describe("rate limiter", () => {

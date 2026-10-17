@@ -11,7 +11,6 @@ import {
   tooMany,
 } from "@/server/http";
 
-/** Opens a timed run over the listed cards, drawn with `seed`. Answers go to `/api/attempts/[token]` when the run ends. */
 export async function POST(request: NextRequest) {
   const body = await readBody(request);
   if (!body) return badRequest();

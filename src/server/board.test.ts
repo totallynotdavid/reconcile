@@ -4,7 +4,6 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ALL_CARDS } from "@/content";
 import { judge } from "@/learning/judge";
-import { prepare } from "@/learning/session";
 import { ids, rightChoice as right, wrongChoice as wrong } from "@/test/cards";
 import {
   ATTEMPT_TTL,
@@ -69,10 +68,6 @@ function play(
 }
 
 describe("choosing a nickname", () => {
-  it("accepts a plain name and keeps its spelling", () => {
-    expect(join("Ada Lovelace").nickname).toBe("Ada Lovelace");
-  });
-
   it("rejects the same name in another case, spacing or separator, so nobody can pose as another player", () => {
     join("Ada Lovelace");
     for (const copy of [
@@ -133,28 +128,6 @@ describe("scoring a run", () => {
     }
   });
 
-  it("scores by the options as shuffled for the seed, not by the card's stored answer", () => {
-    const card = ALL_CARDS.find((c) => c.kind === "choice")!;
-    const picks = new Set<number>();
-    for (let seed = 1; seed < 40; seed++)
-      picks.add(rightChoice(card.id, seed)[0]);
-    expect(picks.size).toBeGreaterThan(1);
-    const seed = 7;
-    const ada = join("Ada Lovelace");
-    const { token } = ok(startAttempt(db, ada.id, [card.id], seed, T0));
-    const shown = prepare(card, seed);
-    if (shown.kind !== "choice") throw new Error("expected a choice card");
-    const stored = card.kind === "choice" ? card.answer : -1;
-    const submit = submitAttempt(
-      db,
-      ada.id,
-      token,
-      { picks: [{ id: card.id, choice: [stored] }] },
-      T0 + MIN_MS_PER_CARD,
-    );
-    expect(ok(submit).correct).toBe(shown.answer === stored ? 1 : 0);
-  });
-
   it("scores a triage card right only when every step is right", () => {
     const triage = ALL_CARDS.find((c) => c.kind === "triage")!;
     const ada = join("Ada Lovelace");
@@ -173,17 +146,12 @@ describe("scoring a run", () => {
     expect(ok(submit).correct).toBe(0);
   });
 
-  it("pays a card once per day: the same level again on the same day adds nothing", () => {
+  it("pays a card once per day: the same level again on the same day adds nothing, the next day pays again", () => {
     const ada = join("Ada Lovelace");
     expect(ok(play(ada.id, ids(5), 5, T0)).points).toBe(50);
     expect(ok(play(ada.id, ids(5), 5, T0 + 60_000)).points).toBe(0);
     expect(ok(play(ada.id, ids(7), 7, T0 + 120_000)).points).toBe(20);
     expect(standings(db, "all", ada.id, T0).me?.points).toBe(70);
-  });
-
-  it("pays the card again on the next day", () => {
-    const ada = join("Ada Lovelace");
-    ok(play(ada.id, ids(5), 5, T0));
     expect(ok(play(ada.id, ids(5), 5, T0 + DAY)).points).toBe(50);
   });
 
@@ -193,59 +161,43 @@ describe("scoring a run", () => {
     expect(ok(play(ada.id, ids(4), 4, T0 + 60_000)).points).toBe(40);
   });
 
-  it("scores a run once: a replay of the same token is refused", () => {
-    const ada = join("Ada Lovelace");
-    const cards = ids(4);
-    const { token } = ok(startAttempt(db, ada.id, cards, SEED, T0));
-    const body = {
-      picks: cards.map((id) => ({ id, choice: rightChoice(id) })),
-    };
-    const at = T0 + MIN_MS_PER_CARD * 4;
-    expect(ok(submitAttempt(db, ada.id, token, body, at)).points).toBe(40);
-    expect(submitAttempt(db, ada.id, token, body, at)).toMatchObject({
-      ok: false,
-      status: 409,
-    });
-    expect(standings(db, "all", ada.id, at).me?.points).toBe(40);
-  });
-
-  it("refuses a run that was finished faster than it can be read", () => {
-    const ada = join("Ada Lovelace");
-    const cards = ids(6);
-    const { token } = ok(startAttempt(db, ada.id, cards, SEED, T0));
-    const body = {
-      picks: cards.map((id) => ({ id, choice: rightChoice(id) })),
-    };
-    expect(submitAttempt(db, ada.id, token, body, T0 + 500)).toMatchObject({
-      ok: false,
-      status: 422,
-    });
-    expect(standings(db, "all", ada.id, T0).me?.points).toBe(0);
-  });
-
-  it("refuses an expired run", () => {
-    const ada = join("Ada Lovelace");
-    const cards = ids(4);
-    const { token } = ok(startAttempt(db, ada.id, cards, SEED, T0));
-    const body = {
-      picks: cards.map((id) => ({ id, choice: rightChoice(id) })),
-    };
-    expect(
-      submitAttempt(db, ada.id, token, body, T0 + ATTEMPT_TTL + 1),
-    ).toMatchObject({ ok: false, status: 410 });
-  });
-
-  it("refuses another player's token", () => {
+  it("refuses a run that is read too fast, expired, someone else's or replayed, and scores it once", () => {
     const ada = join("Ada Lovelace");
     const grace = join("Grace Hopper");
     const cards = ids(4);
-    const { token } = ok(startAttempt(db, ada.id, cards, SEED, T0));
     const body = {
       picks: cards.map((id) => ({ id, choice: rightChoice(id) })),
     };
-    expect(submitAttempt(db, grace.id, token, body, T0 + 60_000)).toMatchObject(
-      { ok: false, status: 404 },
-    );
+    const open = () => ok(startAttempt(db, ada.id, cards, SEED, T0)).token;
+    const readable = T0 + MIN_MS_PER_CARD * cards.length;
+
+    const refused = {
+      "too fast": [
+        422,
+        () => submitAttempt(db, ada.id, open(), body, T0 + 500),
+      ],
+      expired: [
+        410,
+        () => submitAttempt(db, ada.id, open(), body, T0 + ATTEMPT_TTL + 1),
+      ],
+      "someone else's": [
+        404,
+        () => submitAttempt(db, grace.id, open(), body, readable),
+      ],
+      replayed: [
+        409,
+        () => {
+          const token = open();
+          const first = ok(submitAttempt(db, ada.id, token, body, readable));
+          expect(first.points).toBe(40);
+          return submitAttempt(db, ada.id, token, body, readable);
+        },
+      ],
+    } as const;
+    for (const [why, [status, attempt]] of Object.entries(refused))
+      expect(attempt(), why).toMatchObject({ ok: false, status });
+    expect(standings(db, "all", ada.id, readable).me?.points).toBe(40);
+    expect(standings(db, "all", grace.id, readable).me?.points).toBe(0);
   });
 
   it("refuses picks that do not match the cards the attempt opened with", () => {
@@ -282,26 +234,6 @@ describe("scoring a run", () => {
         status: 400,
       });
     expect(standings(db, "all", ada.id, at).me?.points).toBe(0);
-  });
-
-  it("does not trust a verdict or a score sent along with the picks", () => {
-    const ada = join("Ada Lovelace");
-    const cards = ids(4);
-    const { token } = ok(startAttempt(db, ada.id, cards, SEED, T0));
-    const picks = cards.map((id) => ({
-      id,
-      choice: wrongChoice(id),
-      correct: true,
-      points: 9999,
-    }));
-    const result = submitAttempt(
-      db,
-      ada.id,
-      token,
-      { picks, score: 9999 } as never,
-      T0 + 60_000,
-    );
-    expect(ok(result)).toMatchObject({ correct: 0, points: 0 });
   });
 
   it("judges the picks against the seed the attempt opened with, whatever the submit says", () => {

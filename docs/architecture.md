@@ -14,10 +14,12 @@ one Node process, and everything below describes that state.
 | Time      | the server clock, never a client timestamp | attempt expiry, day and week boundaries    |
 
 Every state change by a visitor or player needs a matching `Origin` and a JSON
-body. The client never sends a score, a verdict or a time. It sends the seed it
-plays with when it opens an attempt, and the server stores it with the attempt.
-When the run ends it sends the option indexes it picked and nothing else; the
-server re-derives the cards from the stored seed and judges them
+body (`sameOrigin` in `src/server/http.ts`). A page on another site can make the
+browser send the cookie, but it cannot send an `Origin` that matches ours or
+read the reply. The client never sends a score, a verdict or a time. It sends
+the seed it plays with when it opens an attempt, and the server stores it with
+the attempt. When the run ends it sends the option indexes it picked and nothing
+else; the server re-derives the cards from the stored seed and judges them
 (`src/learning/judge.ts`). A seed in a submit is ignored.
 
 ## States and transitions
@@ -50,6 +52,11 @@ whole site. The address comes from `X-Forwarded-For` and only when `TRUST_PROXY`
 is `1`; without it there is no per-address rule and the site rule alone bounds
 identity farming. A join or rename that fails (an invalid or taken nickname)
 spends nothing, so a typing mistake does not use up the budget.
+
+Every limited action is refused with 429 when any rule in `LIMITS`
+(`src/server/http.ts`) is exhausted. A request without a valid moderator token
+spends the `admin` budget, so guessing the token is slow and a moderator is
+never locked out.
 
 Moderator `unhide` on a player who is not hidden also deletes the reports
 against them, so it is the way to dismiss reports that did not reach the
@@ -94,7 +101,8 @@ inserted only inside the transaction that moves an attempt to `used`, with
 later ones that day pay nothing. A credit leaves only with its player.
 
 Both boards are sums over credits of visible players. The weekly board counts
-days from Monday 00:00 UTC. Ranks are computed, never stored.
+days from Monday 00:00 UTC. Ranks are computed, never stored. Equal points go to
+whoever reached them first, so a rank is a distinct place.
 
 ### Report (`reports`)
 

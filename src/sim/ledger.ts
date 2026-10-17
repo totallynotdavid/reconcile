@@ -12,9 +12,9 @@ export type LedgerEvent =
   | { type: "payment"; amount: number; bankReconciled?: boolean }
   | { type: "credit"; amount: number };
 
-export type LineKind = "invoice" | "payment" | "credit";
+type LineKind = "invoice" | "payment" | "credit";
 
-export type Line = {
+type Line = {
   kind: LineKind;
   label: string;
   /** Always positive. The side is implied by `kind`: the invoice debits, the rest credit. */
@@ -24,14 +24,9 @@ export type Line = {
   bankReconciled: boolean;
 };
 
-export type PartialReconcile = { credit: string; amount: number };
+type PartialReconcile = { credit: string; amount: number };
 
-export type PaymentState =
-  | "not_paid"
-  | "partial"
-  | "in_payment"
-  | "paid"
-  | "reversed";
+type PaymentState = "not_paid" | "partial" | "in_payment" | "paid" | "reversed";
 
 export type Settlement = {
   lines: Line[];

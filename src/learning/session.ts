@@ -40,18 +40,14 @@ export function rng(seed: number): () => number {
   };
 }
 
-export function hashSeed(text: string, salt: number): number {
+function hashSeed(text: string, salt: number): number {
   let h = 2166136261 ^ salt;
   for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   return h >>> 0;
 }
 
 /** Shuffles options and returns where the correct one went. */
-export function shuffleOptions(
-  options: string[],
-  answer: number,
-  rand: () => number,
-) {
+function shuffleOptions(options: string[], answer: number, rand: () => number) {
   const order = options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));

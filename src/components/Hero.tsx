@@ -28,11 +28,7 @@ const OUT = [0.23, 1, 0.32, 1] as const;
 
 type Phase = "landing" | "asking" | "answering";
 
-/**
- * A looping demo of predict-then-watch. Events land on the invoice, the owed amount
- * stays a question while the Predict line fills, then the answer plays out step by step.
- * It runs only while it is on screen.
- */
+/** Runs only while it is on screen. */
 export function Hero() {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(0);
@@ -112,7 +108,6 @@ export function Hero() {
   );
 }
 
-/** A label with a thin line under it. The line fills while the step is under way. */
 function Step({
   label,
   on,

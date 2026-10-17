@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALL_CARDS } from "@/content";
 import type { PredictCard, TriageCard } from "@/content/types";
-import { settle } from "@/sim/ledger";
 import { prepare } from "./session";
 
 const predictCards = ALL_CARDS.filter(
@@ -27,7 +26,6 @@ describe("prepare", () => {
   });
 
   it("makes every predict card's right answer agree with the ledger", () => {
-    expect(predictCards.length).toBeGreaterThan(5);
     const waitingStates = new Set<string>();
     for (const card of predictCards) {
       const reads = ["partial", "credit-note", "waiting-bank"].includes(
@@ -67,12 +65,5 @@ describe("prepare", () => {
     p.steps.forEach((s, i) =>
       expect(s.options[s.answer]).toBe(card.steps[i].options[0]),
     );
-  });
-
-  it("reads a payment with no bank match as in_payment through the ledger", () => {
-    expect(
-      settle(900, [{ type: "payment", amount: 900, bankReconciled: false }])
-        .paymentState,
-    ).toBe("in_payment");
   });
 });

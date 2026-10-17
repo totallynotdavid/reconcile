@@ -13,7 +13,6 @@ export function createLimiter() {
     room(key: string, max: number, now: number): boolean {
       return (live(key, now)?.count ?? 0) < max;
     },
-    /** Counts one hit on `key`. */
     hit(key: string, windowMs: number, now: number): void {
       if (windows.size > 10_000)
         for (const [k, w] of windows)

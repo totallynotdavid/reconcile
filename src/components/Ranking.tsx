@@ -3,7 +3,6 @@ import { Trophy } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { RunState } from "@/learning/run";
 
-/** What the server made of the run: points earned, and where they put the player. */
 export function Ranking({ state }: { state: RunState }) {
   if (state.status === "idle") return null;
   const note =

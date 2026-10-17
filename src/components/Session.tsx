@@ -20,12 +20,10 @@ import { Ranking } from "./Ranking";
 type Props = {
   cards: Parameters<typeof prepare>[0][];
   seed: number;
-  /** When set, a score under the pass ratio counts as a fail. */
   gated?: boolean;
   onDone: (answers: Answer[]) => void;
   /** Scores each round on the server for the leaderboard. Without it the session is local only. */
   run?: Run;
-  /** Rendered under the score when the session ends. */
   footer?: (passed: boolean, retry: () => void) => React.ReactNode;
 };
 
@@ -268,7 +266,6 @@ function SourceTag({ source }: { source?: Source }) {
   );
 }
 
-/** Bottom sheet: the verdict, the reason, the way on. */
 function Feedback({
   item,
   correct,
