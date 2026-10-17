@@ -13,15 +13,29 @@ describe("player cookie", () => {
     const [, mac] = sign("player-1", SECRET).split(".");
     expect(verify(`player-2.${mac}`, SECRET)).toBeNull();
     expect(verify(sign("player-1", SECRET), "b".repeat(32))).toBeNull();
-    for (const bad of [undefined, "", "player-1", "player-1.", ".mac", "player-1.short"]) expect(verify(bad, SECRET)).toBeNull();
+    for (const bad of [
+      undefined,
+      "",
+      "player-1",
+      "player-1.",
+      ".mac",
+      "player-1.short",
+    ])
+      expect(verify(bad, SECRET)).toBeNull();
   });
 });
 
 describe("session secret", () => {
   it("refuses to run in production without a real secret", () => {
-    expect(() => sessionSecret({ NODE_ENV: "production" })).toThrow();
-    expect(() => sessionSecret({ NODE_ENV: "production", SESSION_SECRET: "short" })).toThrow();
-    expect(sessionSecret({ NODE_ENV: "production", SESSION_SECRET: SECRET })).toBe(SECRET);
+    expect(() => sessionSecret({ NODE_ENV: "production" })).toThrow(
+      /SESSION_SECRET/,
+    );
+    expect(() =>
+      sessionSecret({ NODE_ENV: "production", SESSION_SECRET: "short" }),
+    ).toThrow(/SESSION_SECRET/);
+    expect(
+      sessionSecret({ NODE_ENV: "production", SESSION_SECRET: SECRET }),
+    ).toBe(SECRET);
   });
 
   it("falls back to a fixed value outside production so dev needs no setup", () => {
@@ -43,7 +57,8 @@ describe("rate limiter", () => {
 
   it("counts only what is hit, so checking costs nothing", () => {
     const limiter = createLimiter();
-    for (let i = 0; i < 10; i++) expect(limiter.room("join:a", 1, 0)).toBe(true);
+    for (let i = 0; i < 10; i++)
+      expect(limiter.room("join:a", 1, 0)).toBe(true);
     limiter.hit("join:a", 1000, 0);
     expect(limiter.room("join:a", 1, 1)).toBe(false);
   });
