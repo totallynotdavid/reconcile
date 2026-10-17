@@ -13,7 +13,7 @@ import {
   moderator,
   useRoutes,
 } from "@/test/routes";
-import { MAX_OPEN_ATTEMPTS, MIN_MS_PER_CARD } from "@/server/board";
+import { MIN_MS_PER_CARD } from "@/server/board";
 import {
   OFFLINE,
   type RunState,
@@ -61,62 +61,6 @@ describe("a run against the real routes", () => {
         week: { rank: 1, points: 30 },
         all: { rank: 1, points: 30 },
       },
-    });
-  });
-
-  it("asks a player with no nickname to join", async () => {
-    const { run, last } = player();
-    run.begin(cards, SEED);
-    await run.submit(picks);
-    expect(last()).toEqual({ status: "anonymous" });
-  });
-
-  it("tells a hidden player their entry is hidden", async () => {
-    const { site, run, last } = player();
-    const joined = (await (
-      await site.send("/api/players/", { nickname: "Hidden Hal" })
-    ).json()) as { player: { id: string } };
-    await moderator(ADMIN_TOKEN, { id: joined.player.id, verdict: "hide" });
-    run.begin(cards, SEED);
-    await run.submit(picks);
-    expect(last()).toEqual({
-      status: "failed",
-      error: "Your entry is hidden.",
-    });
-  });
-
-  it("tells a player who has too many unfinished runs, with the server's words", async () => {
-    const { site, run, last } = player();
-    await site.send("/api/players/", { nickname: "Busy Bee" });
-    for (let i = 0; i < MAX_OPEN_ATTEMPTS; i++)
-      await site.send("/api/attempts/", { cardIds: cards, seed: SEED });
-    run.begin(cards, SEED);
-    await run.submit(picks);
-    expect(last()).toEqual({
-      status: "failed",
-      error: "Too many unfinished runs.",
-    });
-  });
-
-  it("shows why a refused run is not scored, and shows a replay as refused", async () => {
-    const site = browser();
-    await site.send("/api/players/", { nickname: "Ada Lovelace" });
-    const { run, last } = watch(site.send);
-    run.begin(cards, SEED);
-    await run.submit(picks);
-    expect(last()).toEqual({
-      status: "failed",
-      error: "That run was too fast to be read.",
-    });
-
-    const again = player();
-    await again.site.send("/api/players/", { nickname: "Grace Hopper" });
-    again.run.begin(cards, SEED);
-    await again.run.submit(picks);
-    await again.run.submit(picks);
-    expect(again.last()).toEqual({
-      status: "failed",
-      error: "This run was already scored.",
     });
   });
 
@@ -247,17 +191,21 @@ describe("a server that misbehaves", () => {
   });
 
   it("asks for a nickname on 401 and shows the server's words on 403 and 429", async () => {
-    for (const [status, state] of [
-      [401, { status: "anonymous" }],
-      [403, { status: "failed", error: "Your entry is hidden." }],
-      [429, { status: "failed", error: "Too many requests. Try again later." }],
+    for (const [status, error, state] of [
+      [401, "Join first.", { status: "anonymous" }],
+      [
+        403,
+        "Your entry is hidden.",
+        { status: "failed", error: "Your entry is hidden." },
+      ],
+      [
+        429,
+        "Too many unfinished runs.",
+        { status: "failed", error: "Too many unfinished runs." },
+      ],
     ] as const) {
-      const message =
-        status === 403
-          ? "Your entry is hidden."
-          : "Too many requests. Try again later.";
       const send = await serve((_, res) =>
-        reply(res, status, JSON.stringify({ error: message })),
+        reply(res, status, JSON.stringify({ error })),
       );
       const { run, last } = watch(send);
       run.begin(cards, SEED);

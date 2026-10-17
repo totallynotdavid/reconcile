@@ -12,7 +12,6 @@ export function rightChoice(id: string, seed: number): Choice {
     : [item.answer];
 }
 
-/** Any index that is in range and not the right one. */
 export function wrongChoice(id: string, seed: number): Choice {
   const item = prepare(card(id), seed);
   if (item.kind === "triage")
@@ -21,6 +20,5 @@ export function wrongChoice(id: string, seed: number): Choice {
   return [(item.answer + 1) % size];
 }
 
-/** `n` card ids from position `from` in the deck. */
 export const ids = (n: number, from = 0) =>
   ALL_CARDS.slice(from, from + n).map((c) => c.id);

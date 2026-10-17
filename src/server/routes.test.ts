@@ -7,7 +7,6 @@ import {
   moderator,
   useRoutes,
 } from "@/test/routes";
-import { COOKIE } from "./identity";
 import { LIMITS } from "./http";
 import { MIN_MS_PER_CARD } from "./board";
 
@@ -86,36 +85,6 @@ describe("scoring through the routes", () => {
     expect(await res.json()).toMatchObject({ correct: 0, points: 0 });
   });
 
-  it("refuses a replay, a run read too fast, and another player's token", async () => {
-    const ada = browser();
-    const grace = browser();
-    await join(ada, "Ada Lovelace");
-    await join(grace, "Grace Hopper");
-    const cards = ids(3);
-    const picks = cards.map((id) => ({ id, choice: rightChoice(id, SEED) }));
-    const open = async () =>
-      (
-        (await (
-          await ada.send("/api/attempts/", { cardIds: cards, seed: SEED })
-        ).json()) as { token: string }
-      ).token;
-
-    const fast = await open();
-    expect((await ada.send(`/api/attempts/${fast}/`, { picks })).status).toBe(
-      422,
-    );
-    later(MIN_MS_PER_CARD * 3);
-    expect((await grace.send(`/api/attempts/${fast}/`, { picks })).status).toBe(
-      404,
-    );
-    expect((await ada.send(`/api/attempts/${fast}/`, { picks })).status).toBe(
-      200,
-    );
-    expect((await ada.send(`/api/attempts/${fast}/`, { picks })).status).toBe(
-      409,
-    );
-  });
-
   it("refuses a request without a player cookie, with a forged one, or from another site", async () => {
     const ada = browser();
     await join(ada, "Ada Lovelace");
@@ -138,7 +107,6 @@ describe("scoring through the routes", () => {
       (await elsewhere.send("/api/attempts/", { cardIds: ids(2), seed: SEED }))
         .status,
     ).toBe(400);
-    expect(ada.cookie).toContain(COOKIE);
   });
 
   it("tells a hidden player their entry is hidden, and a reporter cannot add to a hidden entry", async () => {

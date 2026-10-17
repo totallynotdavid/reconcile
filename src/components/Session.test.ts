@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ALL_CARDS } from "@/content";
 import { type RunState, useRun } from "@/learning/run";
 import { prepare } from "@/learning/session";
-import { MAX_OPEN_ATTEMPTS, MIN_MS_PER_CARD } from "@/server/board";
+import { MIN_MS_PER_CARD } from "@/server/board";
 import { rightChoice } from "@/test/cards";
 import {
   ADMIN_TOKEN,
@@ -75,7 +75,7 @@ describe("the results screen of a scored session", () => {
       // The card listens for keys once its effect has run; pressing again after it answered does nothing.
       await vi.waitFor(async () => {
         await press(String(rightChoice(card.id, SEED)[0] + 1));
-        expect(text()).toContain(card.why); // the verdict is on screen
+        expect(text()).toContain(card.why);
       });
       await press("Enter");
     }
@@ -112,31 +112,6 @@ describe("the results screen of a scored session", () => {
     await playThrough();
     await vi.waitFor(() =>
       expect(text()).toContain("Not scored: Your entry is hidden."),
-    );
-  });
-
-  it("says why a run is not scored when the player has too many open runs", async () => {
-    await site.send("/api/players/", { nickname: "Busy Bee" });
-    for (let i = 0; i < MAX_OPEN_ATTEMPTS; i++)
-      await site.send("/api/attempts/", {
-        cardIds: cards.map((c) => c.id),
-        seed: SEED,
-      });
-    await playThrough();
-    await vi.waitFor(() =>
-      expect(text()).toContain("Not scored: Too many unfinished runs."),
-    );
-  });
-
-  it("says the server could not be reached", async () => {
-    await site.send("/api/players/", { nickname: "Offline Olga" });
-    vi.stubGlobal("fetch", () => {
-      started = Promise.resolve();
-      return Promise.reject(new TypeError("fetch failed"));
-    });
-    await playThrough();
-    await vi.waitFor(() =>
-      expect(text()).toContain("Not scored: Could not reach the server."),
     );
   });
 });

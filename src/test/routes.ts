@@ -12,7 +12,7 @@ import * as reports from "@/app/api/reports/route";
 import { closeDb } from "@/server/db";
 import { COOKIE } from "@/server/identity";
 
-export const ORIGIN = "http://localhost:3000";
+const ORIGIN = "http://localhost:3000";
 export const ADMIN_TOKEN = "admin-token-0123456789";
 
 let clock = Date.UTC(2026, 9, 7, 12, 0, 0);
@@ -48,7 +48,6 @@ type Handler = (
   context: { params: Promise<{ token: string }> },
 ) => Promise<Response>;
 
-/** The real route handlers, found the way Next finds them: by path and method. */
 function handlerFor(method: string, pathname: string): Handler | undefined {
   const routes: Record<string, Partial<Record<string, Handler>>> = {
     "/api/players/": players,
@@ -114,10 +113,8 @@ export function browser(
 
   return {
     request,
-    /** Shaped like the `send` of a run: a POST with a JSON body. */
     send: (url: string, body: unknown) => request("POST", url, body),
     get: (url: string) => request("GET", url),
-    /** The cookie jar's current value, for tests that tamper with it. */
     get cookie() {
       return cookie;
     },
@@ -127,7 +124,6 @@ export function browser(
   };
 }
 
-/** A moderator's call to the admin route. */
 export async function moderator(
   token: string,
   body?: unknown,
