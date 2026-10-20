@@ -5,10 +5,10 @@
   "type": "module",
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "motion": "^14.0.0",
-    "next": "^16.4.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "motion": "^14.4.0",
+    "next": "^16.4.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
