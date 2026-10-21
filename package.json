@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "oxlint --deny-warnings && oxfmt --check",
+    "fix": "oxlint --fix && oxfmt",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "bun run lint && bun run typecheck && bun run test && bun run build"
+  },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "motion": "^14.4.0",

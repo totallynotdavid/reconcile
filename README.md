@@ -16,16 +16,16 @@ source file that backs it. Practice cards carry no source.
 
 ```bash
 mise install                     # Bun and Node, pinned in mise.toml
-mise run install
-mise run dev
-mise run test                    # ledger, scheduler, session, progress, scoring, ranking and the session screen
-mise run check                   # lint, typecheck, test and build, as CI runs them
-mise run build && mise run start
+bun install --frozen-lockfile
+bun run dev
+bun run test
+bun run check                    # what CI runs
+bun run build && bun run start
 ```
 
-`mise run lint` skips `AGENTS.md`, listed in `.oxfmtrc.json`: `next dev`
-rewrites its Next.js block with its own line wrapping on every start, so a
-formatted copy would fail the check again.
+`bun run lint` skips `AGENTS.md`, listed in `.oxfmtrc.json`: `next dev` rewrites
+its Next.js block with its own line wrapping on every start, so a formatted copy
+would fail the check again.
 
 Study progress lives in localStorage and works without a server. The leaderboard
 needs the Node server (`next start`), Node 22.18 or newer, and a persistent disk
