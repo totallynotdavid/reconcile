@@ -6,4 +6,5 @@ next-env.d.ts
 *.tsbuildinfo
 data
 .env
-.env.local
+.env.*
+!.env.example
